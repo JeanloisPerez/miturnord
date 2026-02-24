@@ -11,20 +11,80 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+  id            String     @id @default(uuid())
+  full_name     String
+  email         String?    @unique
+  phone         String?    @unique
+  document_id   String?
+  password_hash String
+  status        UserStatus @default(active)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  roles                    UserRole[]
+  sessions                 AuthSession[]
+  institution_memberships  InstitutionUser[]
 }
 
-enum Role {
-  ADMIN
-  EMPRESA
-  USER
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  users UserRole[]
+}
+
+model UserRole {
+  user_id String
+  role_id Int
+
+  user User @relation(fields: [user_id], references: [id])
+  role Role @relation(fields: [role_id], references: [id])
+
+  @@id([user_id, role_id])
+}
+
+model AuthSession {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum UserStatus {
+  active
+  blocked
+  deleted
+}
+
+model Institution {
+  id          String   @id @default(uuid())
+  name        String
+  created_at  DateTime @default(now())
+
+  users       InstitutionUser[]
+}
+
+model InstitutionUser {
+  id              String   @id @default(uuid())
+  institution_id  String
+  user_id         String
+  role            InstitutionRole
+  created_at      DateTime @default(now())
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+  user        User        @relation(fields: [user_id], references: [id])
+
+  @@unique([institution_id, user_id])
+}
+
+enum InstitutionRole {
+  OWNER
+  STAFF
+  MANAGER
 }
