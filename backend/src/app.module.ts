@@ -2,12 +2,32 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { InstitutionsModule } from './institutions/institutions.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { InstitutionTypesModule } from './institution-types/institution-types.module';
+import { ServicesModule } from './services/services.module';
+import { SchedulesModule } from './schedules/schedules.module';
+import { BranchesModule } from './branches/branches.module';
+import { SchedulingEngineModule } from './scheduling-engine/scheduling-engine.module';
+import { BusinessRulesModule } from './business-rules/business-rules.module';
+import { BlockedTimesModule } from './blocked-times/blocked-times.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
+    InstitutionTypesModule,
+    InstitutionsModule,
+    ServicesModule,
+    SchedulesModule,
+    AppointmentsModule,
+    BranchesModule,
+    SchedulingEngineModule,
+    BusinessRulesModule,
+    BlockedTimesModule,
+    ReportsModule,
   ],
 })
 export class AppModule { }

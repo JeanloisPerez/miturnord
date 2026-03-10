@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// MiTurnoRD — Prisma Schema (Advanced Architecture)
+// SaaS multi-tenant platform for appointment management
 
 generator client {
   provider = "prisma-client"
@@ -12,6 +9,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ─────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────
 
 model User {
   id            String     @id @default(uuid())
@@ -24,9 +25,10 @@ model User {
   created_at    DateTime   @default(now())
   updated_at    DateTime   @updatedAt
 
-  roles                    UserRole[]
-  sessions                 AuthSession[]
-  institution_memberships  InstitutionUser[]
+  roles                   UserRole[]
+  sessions                AuthSession[]
+  institution_memberships InstitutionUser[]
+  appointments            Appointment[]
 }
 
 model Role {
@@ -62,20 +64,82 @@ enum UserStatus {
   deleted
 }
 
-model Institution {
+// ─────────────────────────────────────────────
+// INSTITUTION TYPES & DYNAMIC FIELDS
+// ─────────────────────────────────────────────
+
+model InstitutionType {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
+  description String?
+  icon        String?  // emoji or icon key for UI
   created_at  DateTime @default(now())
 
-  users       InstitutionUser[]
+  fields       CustomField[]
+  institutions Institution[]
+}
+
+model CustomField {
+  id                  String          @id @default(uuid())
+  label               String
+  placeholder         String?
+  field_type          FieldType
+  required            Boolean         @default(false)
+  options             String?         // JSON string for SELECT type options
+  order               Int             @default(0)
+  institution_type_id String
+
+  institution_type InstitutionType          @relation(fields: [institution_type_id], references: [id])
+  responses        AppointmentFieldResponse[]
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  EMAIL
+  PHONE
+}
+
+// ─────────────────────────────────────────────
+// INSTITUTION
+// ─────────────────────────────────────────────
+
+model Institution {
+  id                  String            @id @default(uuid())
+  name                String
+  slug                String            @unique
+  description         String?
+  address             String?
+  phone               String?
+  email               String?
+  institution_type_id String
+  status              InstitutionStatus @default(active)
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+
+  institution_type InstitutionType   @relation(fields: [institution_type_id], references: [id])
+  users            InstitutionUser[]
+  services         Service[]
+  schedules        Schedule[]
+  appointments     Appointment[]
+  branches         Branch[]
+  business_rule    BusinessRule?
+}
+
+enum InstitutionStatus {
+  active
+  inactive
+  suspended
 }
 
 model InstitutionUser {
-  id              String   @id @default(uuid())
-  institution_id  String
-  user_id         String
-  role            InstitutionRole
-  created_at      DateTime @default(now())
+  id             String          @id @default(uuid())
+  institution_id String
+  user_id        String
+  role           InstitutionRole
+  created_at     DateTime        @default(now())
 
   institution Institution @relation(fields: [institution_id], references: [id])
   user        User        @relation(fields: [user_id], references: [id])
@@ -87,4 +151,147 @@ enum InstitutionRole {
   OWNER
   STAFF
   MANAGER
+}
+
+// ─────────────────────────────────────────────
+// BRANCHES (Sucursales)
+// ─────────────────────────────────────────────
+
+model Branch {
+  id             String   @id @default(uuid())
+  institution_id String
+  name           String
+  address        String?
+  city           String?
+  phone          String?
+  latitude       Float?
+  longitude      Float?
+  is_main        Boolean  @default(false)
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  institution  Institution   @relation(fields: [institution_id], references: [id])
+  schedules    Schedule[]
+  appointments Appointment[]
+  blocked_times BlockedTime[]
+}
+
+// ─────────────────────────────────────────────
+// SERVICES
+// ─────────────────────────────────────────────
+
+model Service {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  duration       Int      // minutes
+  price          Decimal? @db.Decimal(10, 2)
+  institution_id String
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  institution  Institution   @relation(fields: [institution_id], references: [id])
+  appointments Appointment[]
+}
+
+// ─────────────────────────────────────────────
+// SCHEDULES (Weekly availability)
+// ─────────────────────────────────────────────
+
+model Schedule {
+  id             String   @id @default(uuid())
+  day_of_week    Int      // 0=Sunday, 1=Monday, ... 6=Saturday
+  start_time     String   // "08:00"
+  end_time       String   // "17:00"
+  institution_id String
+  branch_id      String?
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+  branch      Branch?     @relation(fields: [branch_id], references: [id])
+
+  @@unique([institution_id, branch_id, day_of_week])
+}
+
+// ─────────────────────────────────────────────
+// BLOCKED TIMES (Manual slot blocks)
+// ─────────────────────────────────────────────
+
+model BlockedTime {
+  id         String   @id @default(uuid())
+  branch_id  String
+  date       DateTime @db.Date
+  start_time String   // "HH:MM"
+  end_time   String   // "HH:MM"
+  reason     String?
+  created_at DateTime @default(now())
+
+  branch Branch @relation(fields: [branch_id], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// BUSINESS RULES (Automation config)
+// ─────────────────────────────────────────────
+
+model BusinessRule {
+  id                 String   @id @default(uuid())
+  institution_id     String   @unique
+  auto_confirm       Boolean  @default(true)
+  buffer_minutes     Int      @default(0)
+  max_per_slot       Int      @default(1)
+  no_show_minutes    Int      @default(30)
+  advance_book_days  Int      @default(30)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// APPOINTMENTS
+// ─────────────────────────────────────────────
+
+model Appointment {
+  id                   String            @id @default(uuid())
+  date                 DateTime
+  status               AppointmentStatus @default(PENDING)
+  notes                String?
+  institution_id       String
+  service_id           String
+  user_id              String
+  branch_id            String?
+  rescheduled_from_id  String?
+  created_at           DateTime          @default(now())
+  updated_at           DateTime          @updatedAt
+
+  institution Institution              @relation(fields: [institution_id], references: [id])
+  service     Service                  @relation(fields: [service_id], references: [id])
+  user        User                     @relation(fields: [user_id], references: [id])
+  branch      Branch?                  @relation(fields: [branch_id], references: [id])
+  responses   AppointmentFieldResponse[]
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// Dynamic field responses for each appointment
+model AppointmentFieldResponse {
+  id             String @id @default(uuid())
+  appointment_id String
+  field_id       String
+  value          String
+
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  field       CustomField @relation(fields: [field_id], references: [id])
+
+  @@unique([appointment_id, field_id])
 }

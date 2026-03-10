@@ -22,10 +22,26 @@ export class RegisterDto {
     password: string;
 
     @IsString()
-    @IsIn(['CLIENT', 'INSTITUTION_USER'])
+    @IsIn(['CLIENT', 'INSTITUTION_OWNER', 'SAAS_ADMIN'])
     role: string;
 
     @IsOptional()
     @IsString()
     institution_name?: string;
+
+    @IsOptional()
+    @IsString()
+    institution_type_id?: string;
+
+    @IsOptional()
+    @IsString()
+    institution_description?: string;
+
+    @IsOptional()
+    @IsString()
+    institution_address?: string;
+
+    @IsOptional()
+    @IsString()
+    institution_phone?: string;
 }

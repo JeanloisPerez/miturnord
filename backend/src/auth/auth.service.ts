@@ -14,12 +14,12 @@ export class AuthService {
 
     async register(dto: RegisterDto) {
         if (!dto.email && !dto.phone) {
-            throw new BadRequestException('Email or phone is required');
+            throw new BadRequestException('Correo telefono es requerido para el registro');
         }
 
-        if (dto.role === 'INSTITUTION_USER' && !dto.institution_name) {
+        if (dto.role === 'INSTITUTION_OWNER' && (!dto.institution_name || !dto.institution_type_id)) {
             throw new BadRequestException(
-                'Institution name is required for institution users',
+                'El nombre y tipo de institución son requeridos para propietarios',
             );
         }
 
@@ -33,7 +33,7 @@ export class AuthService {
         });
 
         if (existingUser) {
-            throw new BadRequestException('User already exists');
+            throw new BadRequestException('Usuario ya existe');
         }
 
         const selectedRole = await this.prisma.role.findUnique({
@@ -41,12 +41,10 @@ export class AuthService {
         });
 
         if (!selectedRole) {
-            throw new BadRequestException('Invalid role selected');
+            throw new BadRequestException('Rol inválido seleccionado');
         }
 
-        if (selectedRole.name === 'ADMIN') {
-            throw new ForbiddenException('Cannot self-assign ADMIN role');
-        }
+
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
@@ -67,10 +65,25 @@ export class AuthService {
                 },
             });
 
-            if (selectedRole.name === 'INSTITUTION_USER') {
+            if (selectedRole.name === 'INSTITUTION_OWNER') {
+
+                const slug = dto.institution_name!
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .trim()
+                    .replace(/\s+/g, '-') + '-' + Date.now();
+
                 const institution = await tx.institution.create({
                     data: {
                         name: dto.institution_name!,
+                        institution_type_id: dto.institution_type_id!,
+                        slug,
+                        description: dto.institution_description,
+                        address: dto.institution_address,
+                        phone: dto.institution_phone,
+                        email: dto.email,
                     },
                 });
 
@@ -118,14 +131,20 @@ export class AuthService {
     private async generateToken(user: any) {
         const globalRoles = user.roles.map(r => r.role.name);
 
+        const primaryRole = globalRoles[0] || 'CLIENT';
+
         const institutions = user.institution_memberships.map(m => ({
             institution_id: m.institution_id,
             role: m.role,
         }));
 
+        const primaryInstitutionId = institutions.length > 0 ? institutions[0].institution_id : null;
+
         const payload = {
             sub: user.id,
+            role: primaryRole,
             roles: globalRoles,
+            institutionId: primaryInstitutionId,
             institutions,
         };
 
