@@ -27,5 +27,9 @@ export class CreateInstitutionDto {
     @IsOptional()
     @IsEmail()
     email?: string;
+
+    @IsOptional()
+    @IsString()
+    logo_url?: string;
 }
 

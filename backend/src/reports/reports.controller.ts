@@ -14,8 +14,12 @@ export class ReportsController {
     getSummary(
         @Param('institutionId') institutionId: string,
         @Query('range') range: 'week' | 'month' = 'week',
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Query('serviceId') serviceId: string,
+        @Query('branchId') branchId: string,
         @Request() req,
     ) {
-        return this.reportsService.getSummary(institutionId, range, req.user.sub, req.user.role);
+        return this.reportsService.getSummary(institutionId, range, req.user.sub, req.user.role, startDate, endDate, serviceId, branchId);
     }
 }

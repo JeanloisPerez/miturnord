@@ -14,8 +14,11 @@ export class InstitutionsController {
   constructor(private readonly institutionsService: InstitutionsService) { }
 
   @Get()
-  findAll(@Query('search') search?: string) {
-    return this.institutionsService.findAll(search);
+  findAll(
+    @Query('search') search?: string,
+    @Query('institutionTypeId') institutionTypeId?: string,
+  ) {
+    return this.institutionsService.findAll(search, institutionTypeId);
   }
 
 

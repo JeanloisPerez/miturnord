@@ -12,6 +12,9 @@ import { SchedulingEngineModule } from './scheduling-engine/scheduling-engine.mo
 import { BusinessRulesModule } from './business-rules/business-rules.module';
 import { BlockedTimesModule } from './blocked-times/blocked-times.module';
 import { ReportsModule } from './reports/reports.module';
+import { UploadModule } from './upload/upload.module';
+import { UsersModule } from './users/users.module';
+import { CustomFieldsModule } from './custom-fields/custom-fields.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { ReportsModule } from './reports/reports.module';
     BusinessRulesModule,
     BlockedTimesModule,
     ReportsModule,
+    UploadModule,
+    UsersModule,
+    CustomFieldsModule,
   ],
 })
 export class AppModule { }

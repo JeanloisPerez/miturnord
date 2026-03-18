@@ -14,9 +14,23 @@ export class ServicesController {
         return this.servicesService.findByInstitution(id);
     }
 
+    /** Public — services available at a specific branch */
+    @Get('branch/:branchId')
+    findByBranch(@Param('branchId') branchId: string) {
+        return this.servicesService.findByBranch(branchId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.servicesService.findOne(id);
+    }
+
+    /** Owner — view branch assignments for a service */
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Get(':id/branches')
+    @Roles('INSTITUTION_OWNER', 'SAAS_ADMIN')
+    findBranchAssignments(@Param('id') id: string) {
+        return this.servicesService.findBranchAssignments(id);
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,6 +38,18 @@ export class ServicesController {
     @Roles('INSTITUTION_OWNER', 'SAAS_ADMIN')
     create(@Body() dto: CreateServiceDto, @Request() req) {
         return this.servicesService.create(dto, req.user.sub);
+    }
+
+    /** Owner — assign a service to a branch */
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Post(':id/branches/:branchId')
+    @Roles('INSTITUTION_OWNER', 'SAAS_ADMIN')
+    assignToBranch(
+        @Param('id') serviceId: string,
+        @Param('branchId') branchId: string,
+        @Request() req,
+    ) {
+        return this.servicesService.assignToBranch(serviceId, branchId, req.user.sub, req.user.role);
     }
 
     @UseGuards(JwtAuthGuard, RolesGuard)
@@ -38,5 +64,17 @@ export class ServicesController {
     @Roles('INSTITUTION_OWNER', 'SAAS_ADMIN')
     remove(@Param('id') id: string, @Request() req) {
         return this.servicesService.remove(id, req.user.sub, req.user.role);
+    }
+
+    /** Owner — remove a service from a branch */
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Delete(':id/branches/:branchId')
+    @Roles('INSTITUTION_OWNER', 'SAAS_ADMIN')
+    removeFromBranch(
+        @Param('id') serviceId: string,
+        @Param('branchId') branchId: string,
+        @Request() req,
+    ) {
+        return this.servicesService.removeFromBranch(serviceId, branchId, req.user.sub, req.user.role);
     }
 }

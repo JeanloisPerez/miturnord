@@ -72,25 +72,29 @@ model InstitutionType {
   id          String   @id @default(uuid())
   name        String   @unique
   description String?
-  icon        String?  // emoji or icon key for UI
+  icon        String? // emoji or icon key for UI
   created_at  DateTime @default(now())
 
-  fields       CustomField[]
   institutions Institution[]
 }
 
 model CustomField {
-  id                  String          @id @default(uuid())
-  label               String
-  placeholder         String?
-  field_type          FieldType
-  required            Boolean         @default(false)
-  options             String?         // JSON string for SELECT type options
-  order               Int             @default(0)
-  institution_type_id String
+  id          String    @id @default(uuid())
+  label       String
+  placeholder String?
+  field_type  FieldType
+  required    Boolean   @default(false)
+  options     String? // JSON string for SELECT type options
+  order       Int       @default(0)
 
-  institution_type InstitutionType          @relation(fields: [institution_type_id], references: [id])
-  responses        AppointmentFieldResponse[]
+  // Relations: Field belongs to an Institution.
+  // Optionally, it applies only to a specific Service.
+  institution_id String
+  service_id     String?
+
+  institution Institution                @relation(fields: [institution_id], references: [id], onDelete: Cascade)
+  service     Service?                   @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  responses   AppointmentFieldResponse[]
 }
 
 enum FieldType {
@@ -100,6 +104,7 @@ enum FieldType {
   SELECT
   EMAIL
   PHONE
+  FILE
 }
 
 // ─────────────────────────────────────────────
@@ -111,6 +116,7 @@ model Institution {
   name                String
   slug                String            @unique
   description         String?
+  logo_url            String? // URL imagen/logo de la institución
   address             String?
   phone               String?
   email               String?
@@ -126,6 +132,7 @@ model Institution {
   appointments     Appointment[]
   branches         Branch[]
   business_rule    BusinessRule?
+  custom_fields    CustomField[]
 }
 
 enum InstitutionStatus {
@@ -171,10 +178,27 @@ model Branch {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  institution  Institution   @relation(fields: [institution_id], references: [id])
-  schedules    Schedule[]
-  appointments Appointment[]
+  institution   Institution   @relation(fields: [institution_id], references: [id])
+  schedules     Schedule[]
+  appointments  Appointment[]
   blocked_times BlockedTime[]
+  services      BranchService[]
+}
+
+// ─────────────────────────────────────────────
+// BRANCH ↔ SERVICE (M:N — not all services exist in all branches)
+// ─────────────────────────────────────────────
+
+model BranchService {
+  branch_id  String
+  service_id String
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@id([branch_id, service_id])
 }
 
 // ─────────────────────────────────────────────
@@ -185,15 +209,18 @@ model Service {
   id             String   @id @default(uuid())
   name           String
   description    String?
-  duration       Int      // minutes
+  image_url      String? // URL imagen del servicio
+  duration       Int // minutes
   price          Decimal? @db.Decimal(10, 2)
   institution_id String
   active         Boolean  @default(true)
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  institution  Institution   @relation(fields: [institution_id], references: [id])
-  appointments Appointment[]
+  institution   Institution   @relation(fields: [institution_id], references: [id])
+  appointments  Appointment[]
+  custom_fields CustomField[]
+  branches      BranchService[]
 }
 
 // ─────────────────────────────────────────────
@@ -202,9 +229,9 @@ model Service {
 
 model Schedule {
   id             String   @id @default(uuid())
-  day_of_week    Int      // 0=Sunday, 1=Monday, ... 6=Saturday
-  start_time     String   // "08:00"
-  end_time       String   // "17:00"
+  day_of_week    Int // 0=Sunday, 1=Monday, ... 6=Saturday
+  start_time     String // "08:00"
+  end_time       String // "17:00"
   institution_id String
   branch_id      String?
   active         Boolean  @default(true)
@@ -224,8 +251,8 @@ model BlockedTime {
   id         String   @id @default(uuid())
   branch_id  String
   date       DateTime @db.Date
-  start_time String   // "HH:MM"
-  end_time   String   // "HH:MM"
+  start_time String // "HH:MM"
+  end_time   String // "HH:MM"
   reason     String?
   created_at DateTime @default(now())
 
@@ -237,15 +264,15 @@ model BlockedTime {
 // ─────────────────────────────────────────────
 
 model BusinessRule {
-  id                 String   @id @default(uuid())
-  institution_id     String   @unique
-  auto_confirm       Boolean  @default(true)
-  buffer_minutes     Int      @default(0)
-  max_per_slot       Int      @default(1)
-  no_show_minutes    Int      @default(30)
-  advance_book_days  Int      @default(30)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id                String   @id @default(uuid())
+  institution_id    String   @unique
+  auto_confirm      Boolean  @default(true)
+  buffer_minutes    Int      @default(0)
+  max_per_slot      Int      @default(1)
+  no_show_minutes   Int      @default(30)
+  advance_book_days Int      @default(30)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
   institution Institution @relation(fields: [institution_id], references: [id])
 }
@@ -255,22 +282,22 @@ model BusinessRule {
 // ─────────────────────────────────────────────
 
 model Appointment {
-  id                   String            @id @default(uuid())
-  date                 DateTime
-  status               AppointmentStatus @default(PENDING)
-  notes                String?
-  institution_id       String
-  service_id           String
-  user_id              String
-  branch_id            String?
-  rescheduled_from_id  String?
-  created_at           DateTime          @default(now())
-  updated_at           DateTime          @updatedAt
+  id                  String            @id @default(uuid())
+  date                DateTime
+  status              AppointmentStatus @default(PENDING)
+  notes               String?
+  institution_id      String
+  service_id          String
+  user_id             String
+  branch_id           String?
+  rescheduled_from_id String?
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
 
-  institution Institution              @relation(fields: [institution_id], references: [id])
-  service     Service                  @relation(fields: [service_id], references: [id])
-  user        User                     @relation(fields: [user_id], references: [id])
-  branch      Branch?                  @relation(fields: [branch_id], references: [id])
+  institution Institution                @relation(fields: [institution_id], references: [id])
+  service     Service                    @relation(fields: [service_id], references: [id])
+  user        User                       @relation(fields: [user_id], references: [id])
+  branch      Branch?                    @relation(fields: [branch_id], references: [id])
   responses   AppointmentFieldResponse[]
 }
 

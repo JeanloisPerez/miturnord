@@ -1,0 +1,87 @@
+export const DEFAULT_INSTITUTION_TYPES = [
+    {
+        name: 'Salud',
+        description: 'Clínicas, hospitales, dentistas, laboratorios y servicios médicos en general',
+        icon: '🏥',
+        fields: [
+            { label: 'Nombre del Paciente', field_type: 'TEXT', required: true, placeholder: 'Ej: Juan Pérez', order: 1 },
+            { label: 'Cédula / Pasaporte', field_type: 'TEXT', required: true, placeholder: 'Ej: 001-0000000-0', order: 2 },
+            { label: 'Fecha de Nacimiento', field_type: 'DATE', required: true, placeholder: '', order: 3 },
+            { label: 'Seguro Médico', field_type: 'SELECT', required: false, options: JSON.stringify(['ARS Humano', 'ARS Senasa', 'ARS Universal', 'ARS Banreservas', 'Ninguno']), order: 4 },
+            { label: 'Motivo de Consulta', field_type: 'TEXT', required: true, placeholder: 'Describa brevemente su motivo', order: 5 },
+            { label: 'Teléfono de Contacto', field_type: 'PHONE', required: true, placeholder: '809-000-0000', order: 6 },
+        ],
+    },
+    {
+        name: 'Finanzas',
+        description: 'Bancos, cooperativas, seguros y entidades financieras',
+        icon: '🏦',
+        fields: [
+            { label: 'Nombre del Titular', field_type: 'TEXT', required: true, placeholder: 'Nombre completo', order: 1 },
+            { label: 'Cédula / Pasaporte', field_type: 'TEXT', required: true, placeholder: '001-0000000-0', order: 2 },
+            { label: 'Número de Cuenta', field_type: 'NUMBER', required: false, placeholder: 'Número de cuenta (si aplica)', order: 3 },
+            { label: 'Tipo de Trámite', field_type: 'SELECT', required: true, options: JSON.stringify(['Apertura de cuenta', 'Préstamo personal', 'Tarjeta de crédito', 'Inversión', 'Transferencia internacional', 'Atención al cliente']), order: 4 },
+            { label: 'Teléfono', field_type: 'PHONE', required: true, placeholder: '809-000-0000', order: 5 },
+        ],
+    },
+    {
+        name: 'Gobierno',
+        description: 'Ministerios, oficinas gubernamentales, registro civil y organismos públicos',
+        icon: '🏛️',
+        fields: [
+            { label: 'Nombre Completo', field_type: 'TEXT', required: true, placeholder: 'Nombre completo del ciudadano', order: 1 },
+            { label: 'Cédula de Identidad', field_type: 'TEXT', required: true, placeholder: '001-0000000-0', order: 2 },
+            { label: 'Tipo de Gestión', field_type: 'SELECT', required: true, options: JSON.stringify(['Solicitud de documentos', 'Registro civil', 'Licencias y permisos', 'Trámite fiscal', 'Consulta informativa', 'Otro']), order: 3 },
+            { label: 'Correo Electrónico', field_type: 'EMAIL', required: false, placeholder: 'correo@ejemplo.com', order: 4 },
+            { label: 'Teléfono', field_type: 'PHONE', required: true, placeholder: '809-000-0000', order: 5 },
+        ],
+    },
+    {
+        name: 'Educación',
+        description: 'Colegios, universidades, academias y centros de capacitación',
+        icon: '🎓',
+        fields: [
+            { label: 'Nombre del Estudiante', field_type: 'TEXT', required: true, placeholder: 'Nombre completo', order: 1 },
+            { label: 'Matrícula', field_type: 'TEXT', required: true, placeholder: 'Número de matrícula', order: 2 },
+            { label: 'Grado / Carrera', field_type: 'TEXT', required: true, placeholder: 'Ej: 2do Bachillerato / Ingeniería', order: 3 },
+            { label: 'Motivo de la Cita', field_type: 'SELECT', required: true, options: JSON.stringify(['Orientación académica', 'Trámite administrativo', 'Reunión con docente', 'Asunto disciplinario', 'Otro']), order: 4 },
+            { label: 'Teléfono', field_type: 'PHONE', required: false, placeholder: '809-000-0000', order: 5 },
+        ],
+    },
+    {
+        name: 'Bienestar',
+        description: 'Salones de belleza, spas, barberías, gimnasios y centros de bienestar',
+        icon: '✂️',
+        fields: [
+            { label: 'Nombre del Cliente', field_type: 'TEXT', required: true, placeholder: 'Su nombre', order: 1 },
+            { label: 'Teléfono', field_type: 'PHONE', required: true, placeholder: '809-000-0000', order: 2 },
+            { label: 'Tipo de Servicio', field_type: 'SELECT', required: true, options: JSON.stringify(['Corte de cabello', 'Coloración', 'Manicure', 'Pedicure', 'Tratamiento capilar', 'Spa facial', 'Barbería', 'Otro']), order: 3 },
+            { label: 'Nota Adicional', field_type: 'TEXT', required: false, placeholder: 'Preferencias o alergias', order: 4 },
+        ],
+    },
+    {
+        name: 'Servicios Profesionales',
+        description: 'Consultorios legales, contables, notarías, agencias e ingeniería',
+        icon: '💼',
+        fields: [
+            { label: 'Nombre Completo', field_type: 'TEXT', required: true, placeholder: 'Nombre del cliente', order: 1 },
+            { label: 'Correo Electrónico', field_type: 'EMAIL', required: true, placeholder: 'correo@empresa.com', order: 2 },
+            { label: 'Empresa (si aplica)', field_type: 'TEXT', required: false, placeholder: 'Nombre de la empresa', order: 3 },
+            { label: 'Área de Consulta', field_type: 'SELECT', required: true, options: JSON.stringify(['Legal / Jurídica', 'Contabilidad / Finanzas', 'Consultoría empresarial', 'Tecnología', 'Ingeniería', 'Otro']), order: 4 },
+            { label: 'Descripción Breve', field_type: 'TEXT', required: true, placeholder: 'Describa brevemente su situación', order: 5 },
+        ],
+    },
+    {
+        name: 'Automotriz',
+        description: 'Talleres mecánicos, concesionarios, revisión vehicular y servicios automotrices',
+        icon: '🔧',
+        fields: [
+            { label: 'Nombre del Propietario', field_type: 'TEXT', required: true, placeholder: 'Nombre completo', order: 1 },
+            { label: 'Teléfono', field_type: 'PHONE', required: true, placeholder: '809-000-0000', order: 2 },
+            { label: 'Marca del Vehículo', field_type: 'TEXT', required: true, placeholder: 'Ej: Toyota Corolla 2020', order: 3 },
+            { label: 'Placa / Tablilla', field_type: 'TEXT', required: true, placeholder: 'Ej: A123456', order: 4 },
+            { label: 'Tipo de Servicio', field_type: 'SELECT', required: true, options: JSON.stringify(['Cambio de aceite', 'Revisión general', 'Frenos', 'Sistema eléctrico', 'Transmisión', 'Inspección vehicular', 'Otro']), order: 5 },
+            { label: 'Descripción del Problema', field_type: 'TEXT', required: false, placeholder: 'Describa el problema del vehículo', order: 6 },
+        ],
+    },
+];

@@ -10,6 +10,10 @@ export class ReportsService {
         range: 'week' | 'month',
         userId: string,
         userRole: string,
+        startDate?: string,
+        endDate?: string,
+        serviceId?: string,
+        branchId?: string,
     ) {
         // Ownership check
         if (userRole !== 'SAAS_ADMIN') {
@@ -25,25 +29,43 @@ export class ReportsService {
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
 
+        // Extra filters
+        const extraWhere: any = {};
+        if (serviceId) extraWhere.service_id = serviceId;
+        if (branchId) extraWhere.branch_id = branchId;
+
         // Range boundaries
-        const rangeDays = range === 'month' ? 30 : 7;
-        const rangeStart = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+        let rangeStart: Date;
+        let rangeEnd: Date = now;
+        let rangeDays: number;
+        let rangeLabel = '';
+
+        if (startDate && endDate) {
+            rangeStart = new Date(startDate + 'T00:00:00');
+            rangeEnd = new Date(endDate + 'T23:59:59');
+            rangeDays = Math.max(1, Math.ceil((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)));
+            rangeLabel = `${startDate} a ${endDate}`;
+        } else {
+            rangeDays = range === 'month' ? 30 : 7;
+            rangeStart = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+            rangeLabel = range === 'month' ? 'Últimos 30 días' : 'Últimos 7 días';
+        }
 
         const [todayAppts, rangeAppts, allAppts] = await Promise.all([
             // Today
             this.prisma.appointment.findMany({
-                where: { institution_id: institutionId, date: { gte: todayStart, lte: todayEnd } },
+                where: { institution_id: institutionId, date: { gte: todayStart, lte: todayEnd }, ...extraWhere },
                 include: { service: { select: { name: true } }, user: { select: { id: true, full_name: true, email: true } } },
                 orderBy: { date: 'asc' },
             }),
             // Range
             this.prisma.appointment.findMany({
-                where: { institution_id: institutionId, date: { gte: rangeStart, lte: now } },
+                where: { institution_id: institutionId, date: { gte: rangeStart, lte: rangeEnd }, ...extraWhere },
                 include: { service: { select: { id: true, name: true } } },
             }),
             // All time for status breakdown
             this.prisma.appointment.findMany({
-                where: { institution_id: institutionId },
+                where: { institution_id: institutionId, ...extraWhere },
                 select: { status: true, date: true, service: { select: { id: true, name: true } } },
             }),
         ]);
@@ -68,7 +90,7 @@ export class ReportsService {
         // Appointments by day (range) for chart
         const byDay: Record<string, number> = {};
         for (let i = rangeDays - 1; i >= 0; i--) {
-            const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+            const d = new Date(rangeEnd.getTime() - i * 24 * 60 * 60 * 1000);
             const key = d.toISOString().split('T')[0];
             byDay[key] = 0;
         }
@@ -98,7 +120,7 @@ export class ReportsService {
                 list: todayAppts,
             },
             range: {
-                label: range === 'month' ? 'Últimos 30 días' : 'Últimos 7 días',
+                label: rangeLabel,
                 total: rangeAppts.length,
                 statusCounts,
                 uniqueClients,

@@ -2,31 +2,50 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UpdateInstitutionDto } from './dto/update-institution.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_INSTITUTION_TYPES } from '../constants/institution-types';
 
 const INSTITUTION_INCLUDE = {
-  institution_type: {
-    include: { fields: { orderBy: { order: 'asc' as const } } },
-  },
+  institution_type: true,
   services: { where: { active: true }, orderBy: { name: 'asc' as const } },
   schedules: { where: { active: true }, orderBy: { day_of_week: 'asc' as const } },
+  custom_fields: { orderBy: { order: 'asc' as const } }
 };
 
 @Injectable()
 export class InstitutionsService {
   constructor(private prisma: PrismaService) { }
 
-  create(dto: CreateInstitutionDto) {
-    return this.prisma.institution.create({
+  async create(dto: CreateInstitutionDto) {
+    const institution = await this.prisma.institution.create({
       data: dto,
       include: INSTITUTION_INCLUDE,
     });
+
+    if (institution.institution_type) {
+      const defaultType = DEFAULT_INSTITUTION_TYPES.find(t => t.name === institution.institution_type.name);
+      if (defaultType && defaultType.fields) {
+        await this.prisma.customField.createMany({
+          data: defaultType.fields.map(f => ({
+            ...f,
+            field_type: f.field_type as any,
+            institution_id: institution.id
+          }))
+        });
+      }
+    }
+
+    return this.prisma.institution.findUnique({
+      where: { id: institution.id },
+      include: INSTITUTION_INCLUDE
+    });
   }
 
-  findAll(search?: string) {
+  findAll(search?: string, institutionTypeId?: string) {
     return this.prisma.institution.findMany({
       where: {
         status: 'active',
         ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+        ...(institutionTypeId ? { institution_type_id: institutionTypeId } : {}),
       },
       include: {
         institution_type: { select: { id: true, name: true, icon: true } },

@@ -8,7 +8,6 @@ export class InstitutionTypesService {
     findAll() {
         return this.prisma.institutionType.findMany({
             include: {
-                fields: { orderBy: { order: 'asc' } },
                 _count: { select: { institutions: true } },
             },
             orderBy: { name: 'asc' },
@@ -18,7 +17,6 @@ export class InstitutionTypesService {
     async findOne(id: string) {
         const type = await this.prisma.institutionType.findUnique({
             where: { id },
-            include: { fields: { orderBy: { order: 'asc' } } },
         });
         if (!type) throw new NotFoundException(`Tipo de institución ${id} no encontrado`);
         return type;

@@ -36,7 +36,6 @@ export class ServicesService {
     }
 
     async create(dto: CreateServiceDto, userId: string) {
-        // Ensure requesting user is the OWNER of this institution
         const membership = await this.prisma.institutionUser.findFirst({
             where: { institution_id: dto.institution_id, user_id: userId, role: 'OWNER' },
         });
@@ -73,5 +72,72 @@ export class ServicesService {
             if (!membership) throw new ForbiddenException('No tienes permiso para eliminar este servicio');
         }
         return this.prisma.service.update({ where: { id }, data: { active: false } });
+    }
+
+    // ─── Branch assignment ──────────────────────────────────────────────
+
+    /** List active services assigned to a specific branch */
+    findByBranch(branchId: string) {
+        return this.prisma.service.findMany({
+            where: {
+                active: true,
+                branches: { some: { branch_id: branchId, active: true } },
+            },
+            orderBy: { name: 'asc' },
+        });
+    }
+
+    /** Get all branch assignments for a given service */
+    findBranchAssignments(serviceId: string) {
+        return this.prisma.branchService.findMany({
+            where: { service_id: serviceId },
+            include: { branch: { select: { id: true, name: true, city: true, is_main: true } } },
+        });
+    }
+
+    /** Assign a service to a branch (idempotent upsert) */
+    async assignToBranch(serviceId: string, branchId: string, userId: string, userRole: string) {
+        const service = await this.findOne(serviceId);
+
+        if (userRole !== 'SAAS_ADMIN') {
+            const membership = await this.prisma.institutionUser.findFirst({
+                where: { institution_id: service.institution_id, user_id: userId, role: 'OWNER' },
+            });
+            if (!membership) throw new ForbiddenException('Sin permiso para asignar servicios a esta sucursal');
+        }
+
+        // Confirm branch belongs to same institution
+        const branch = await this.prisma.branch.findFirst({
+            where: { id: branchId, institution_id: service.institution_id },
+        });
+        if (!branch) throw new NotFoundException('Sucursal no encontrada o no pertenece a esta institución');
+
+        return this.prisma.branchService.upsert({
+            where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
+            create: { branch_id: branchId, service_id: serviceId, active: true },
+            update: { active: true },
+        });
+    }
+
+    /** Deactivate a service from a branch (soft-delete) */
+    async removeFromBranch(serviceId: string, branchId: string, userId: string, userRole: string) {
+        const service = await this.findOne(serviceId);
+
+        if (userRole !== 'SAAS_ADMIN') {
+            const membership = await this.prisma.institutionUser.findFirst({
+                where: { institution_id: service.institution_id, user_id: userId, role: 'OWNER' },
+            });
+            if (!membership) throw new ForbiddenException('Sin permiso para modificar asignaciones de esta institución');
+        }
+
+        const assignment = await this.prisma.branchService.findUnique({
+            where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
+        });
+        if (!assignment) throw new NotFoundException('El servicio no está asignado a esta sucursal');
+
+        return this.prisma.branchService.update({
+            where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
+            data: { active: false },
+        });
     }
 }

@@ -30,6 +30,14 @@ export class SchedulingEngineService {
         });
         if (!service) return [];
 
+        // 1b. If a branch is specified, verify the service is assigned to it
+        if (branchId) {
+            const branchAssignment = await this.prisma.branchService.findUnique({
+                where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
+            });
+            if (!branchAssignment || !branchAssignment.active) return [];
+        }
+
         // 2. Get business rules for buffer
         const rule = await this.prisma.businessRule.findUnique({
             where: { institution_id: institutionId },

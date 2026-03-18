@@ -24,13 +24,27 @@ api.interceptors.response.use(
 export const registerUser = (data: object) => api.post('/auth/register', data);
 export const loginUser = (data: object) => api.post('/auth/login', data);
 
+// ── Upload ────────────────────────────────────────────────────────────────
+export const uploadFile = async (file: File): Promise<string> => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await api.post('/upload', fd);
+    return r.data.url as string;
+};
+
+// ── User Profile ──────────────────────────────────────────────────────────
+export const getMe = () => api.get('/users/me');
+export const updateMe = (data: object) => api.patch('/users/me', data);
+export const changePassword = (data: { current_password: string; new_password: string }) =>
+    api.patch('/users/me/password', data);
+
 // ── Institution Types ─────────────────────────────────────────────────────
 export const getInstitutionTypes = () => api.get('/institution-types');
 export const getInstitutionType = (id: string) => api.get(`/institution-types/${id}`);
 
 // ── Institutions ──────────────────────────────────────────────────────────
-export const getInstitutions = (search?: string) =>
-    api.get('/institutions', { params: search ? { search } : undefined });
+export const getInstitutions = (search?: string, institutionTypeId?: string) =>
+    api.get('/institutions', { params: { ...(search ? { search } : {}), ...(institutionTypeId ? { institutionTypeId } : {}) } });
 export const getInstitution = (id: string) => api.get(`/institutions/${id}`);
 export const updateInstitution = (id: string, data: object) => api.patch(`/institutions/${id}`, data);
 
@@ -45,6 +59,14 @@ export const deleteBranch = (id: string) => api.delete(`/branches/${id}`);
 // ── Services ────────────────────────────────────────────────────────────
 export const getServicesByInstitution = (institutionId: string) =>
     api.get(`/services/institution/${institutionId}`);
+export const getServicesByBranch = (branchId: string) =>
+    api.get(`/services/branch/${branchId}`);
+export const getServiceBranchAssignments = (serviceId: string) =>
+    api.get(`/services/${serviceId}/branches`);
+export const assignServiceToBranch = (serviceId: string, branchId: string) =>
+    api.post(`/services/${serviceId}/branches/${branchId}`);
+export const removeServiceFromBranch = (serviceId: string, branchId: string) =>
+    api.delete(`/services/${serviceId}/branches/${branchId}`);
 export const createService = (data: object) => api.post('/services', data);
 export const updateService = (id: string, data: object) => api.patch(`/services/${id}`, data);
 export const deleteService = (id: string) => api.delete(`/services/${id}`);
@@ -84,12 +106,19 @@ export const updateBusinessRules = (institutionId: string, data: object) =>
 
 // ── Blocked Times ──────────────────────────────────────────────────────
 export const getBlockedTimes = (branchId: string) =>
-    api.get('/blocked-times', { params: { branchId } });
+    api.get(`/blocked-times/${branchId}`);
 export const createBlockedTime = (data: object) => api.post('/blocked-times', data);
 export const deleteBlockedTime = (id: string) => api.delete(`/blocked-times/${id}`);
 
+// ── Custom Fields ────────────────────────────────────────────────────────
+export const getCustomFields = (institutionId: string, serviceId?: string) =>
+    api.get(`/custom-fields/institution/${institutionId}`, { params: { serviceId } });
+export const createCustomField = (data: object) => api.post('/custom-fields', data);
+export const updateCustomField = (id: string, data: object) => api.patch(`/custom-fields/${id}`, data);
+export const deleteCustomField = (id: string) => api.delete(`/custom-fields/${id}`);
+
 // ── Reports ────────────────────────────────────────────────────────────
-export const getReports = (institutionId: string, range: 'week' | 'month' = 'week') =>
-    api.get(`/reports/institution/${institutionId}`, { params: { range } });
+export const getReports = (institutionId: string, range?: string, params?: { startDate?: string; endDate?: string; serviceId?: string; branchId?: string; }) =>
+    api.get(`/reports/institution/${institutionId}`, { params: { range, ...params } });
 
 export default api;

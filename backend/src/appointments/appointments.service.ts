@@ -22,21 +22,26 @@ export class AppointmentsService {
   ) { }
 
   async create(dto: CreateAppointmentDto, userId: string) {
-    // 1. Validate service belongs to institution and is active
+
     const service = await this.prisma.service.findFirst({
       where: { id: dto.service_id, institution_id: dto.institution_id, active: true },
     });
     if (!service) throw new BadRequestException('El servicio no pertenece a esta institución o no está activo');
 
-    // 2. Validate institution exists and get dynamic fields
+    // 2. Validate institution exists
     const institution = await this.prisma.institution.findUnique({
       where: { id: dto.institution_id },
-      include: { institution_type: { include: { fields: true } } },
     });
     if (!institution) throw new NotFoundException('Institución no encontrada');
 
-    // 3. Validate required dynamic fields
-    const requiredFields = institution.institution_type.fields.filter((f) => f.required);
+    // 3. Validate required custom fields for this institution (and service if applicable)
+    const institutionFields = await this.prisma.customField.findMany({
+      where: {
+        institution_id: dto.institution_id,
+        OR: [{ service_id: null }, { service_id: dto.service_id }]
+      }
+    });
+    const requiredFields = institutionFields.filter((f) => f.required);
     const providedFieldIds = new Set((dto.field_responses || []).map((r) => r.field_id));
     const missingFields = requiredFields.filter((f) => !providedFieldIds.has(f.id));
     if (missingFields.length > 0) {
