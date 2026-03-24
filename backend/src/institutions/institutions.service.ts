@@ -98,4 +98,27 @@ export class InstitutionsService {
       data: { status: 'inactive' },
     });
   }
+
+  adminFindAll(search?: string) {
+    return this.prisma.institution.findMany({
+      where: {
+        ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+      },
+      include: {
+        institution_type: { select: { id: true, name: true, icon: true } },
+        _count: { select: { appointments: true, branches: true, services: true, users: true } },
+      },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  async adminStats() {
+    const [institutions, users, appointments] = await Promise.all([
+      this.prisma.institution.count(),
+      this.prisma.user.count(),
+      this.prisma.appointment.count(),
+    ]);
+    const activeInstitutions = await this.prisma.institution.count({ where: { status: 'active' } });
+    return { institutions, activeInstitutions, users, appointments };
+  }
 }

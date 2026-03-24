@@ -1,19 +1,30 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 
 export class CreateServiceDto {
+    @ApiProperty({ example: 'Consulta General', description: 'Nombre del servicio' })
     name: string;
+    @ApiProperty({ example: 'Evaluación médica general', description: 'Descripción detallada', required: false })
     description?: string;
+    @ApiProperty({ example: 30, description: 'Duración en minutos' })
     duration: number;   // minutes
+    @ApiProperty({ example: 1500.00, description: 'Precio del servicio', required: false })
     price?: number;
+    @ApiProperty({ example: 'uuid-institucion', description: 'ID de la institución' })
     institution_id: string;
 }
 
 export class UpdateServiceDto {
+    @ApiProperty({ example: 'Consulta General (Actualizada)', description: 'Nombre del servicio', required: false })
     name?: string;
+    @ApiProperty({ example: 'Evaluación médica especializada', description: 'Descripción detallada', required: false })
     description?: string;
+    @ApiProperty({ example: 45, description: 'Duración en minutos', required: false })
     duration?: number;
+    @ApiProperty({ example: 2000.00, description: 'Precio del servicio', required: false })
     price?: number;
+    @ApiProperty({ example: false, description: 'Estado activo o inactivo', required: false })
     active?: boolean;
 }
 

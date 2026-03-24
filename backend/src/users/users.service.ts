@@ -49,4 +49,25 @@ export class UsersService {
         });
         return { message: 'Contraseña actualizada correctamente' };
     }
+
+    async adminListUsers() {
+        return this.prisma.user.findMany({
+            select: {
+                id: true,
+                full_name: true,
+                email: true,
+                phone: true,
+                status: true,
+                created_at: true,
+                roles: { include: { role: true } },
+                institution_memberships: {
+                    select: {
+                        role: true,
+                        institution: { select: { id: true, name: true } },
+                    },
+                },
+            },
+            orderBy: { created_at: 'desc' },
+        });
+    }
 }

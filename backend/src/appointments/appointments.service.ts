@@ -5,6 +5,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SchedulingEngineService } from '../scheduling-engine/scheduling-engine.service';
+import { EmailsService } from '../emails/emails.service';
 
 const APPOINTMENT_INCLUDE = {
   service: { select: { id: true, name: true, duration: true, price: true } },
@@ -19,6 +20,7 @@ export class AppointmentsService {
   constructor(
     private prisma: PrismaService,
     private schedulingEngine: SchedulingEngineService,
+    private emailsService: EmailsService,
   ) { }
 
   async create(dto: CreateAppointmentDto, userId: string) {
@@ -67,7 +69,7 @@ export class AppointmentsService {
     }
 
     // 5. Create appointment (auto-confirm based on business rules)
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
           institution_id: dto.institution_id,
@@ -92,6 +94,22 @@ export class AppointmentsService {
 
       return tx.appointment.findUnique({ where: { id: appointment.id }, include: APPOINTMENT_INCLUDE });
     });
+
+    if (result && result.status === 'CONFIRMED' && result.user?.email) {
+      const formattedDate = result.date.toLocaleString('es-DO', {
+        dateStyle: 'full', timeStyle: 'short'
+      });
+      // Fire and forget email
+      this.emailsService.sendAppointmentConfirmation(
+        result.user.email,
+        result.user.full_name,
+        formattedDate,
+        result.service.name,
+        result.institution.name
+      ).catch(e => console.error('Fallo al enviar correo desde AppointmentsService:', e));
+    }
+
+    return result;
   }
 
   findAll(userId: string, role: string, institutionId?: string) {

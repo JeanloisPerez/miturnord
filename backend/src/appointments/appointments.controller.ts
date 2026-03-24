@@ -1,6 +1,7 @@
 import {
   Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -8,19 +9,26 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
+@ApiTags('Citas - Appointments')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) { }
 
-  @Post()
+  @Post('createAppointment')
   @Roles('CLIENT')
+  @ApiOperation({ summary: 'Crear una nueva cita (Solo Clientes)' })
+  @ApiResponse({ status: 201, description: 'Cita creada exitosamente.' })
+  @ApiResponse({ status: 409, description: 'Horario no disponible.' })
   create(@Body() dto: CreateAppointmentDto, @Request() req) {
     return this.appointmentsService.create(dto, req.user.sub);
   }
 
-  @Get()
+  @Get('appointmentList')
   @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER', 'CLIENT')
+  @ApiOperation({ summary: 'Obtener lista de citas del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Citas devueltas correctamente.' })
   findAll(@Request() req) {
     return this.appointmentsService.findAll(
       req.user.sub,
@@ -29,8 +37,13 @@ export class AppointmentsController {
     );
   }
 
-  @Get('institution/:institutionId')
+  @Get('appointmentListByInstitution/:institutionId')
   @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER')
+  @ApiOperation({ summary: 'Obtener citas de una institución específica con filtros opcionales' })
+  @ApiQuery({ name: 'status', required: false, description: 'Filtrar por estado de la cita (Ej. PENDING, CONFIRMED)' })
+  @ApiQuery({ name: 'branchId', required: false, description: 'Filtrar por ID de la sucursal' })
+  @ApiQuery({ name: 'date', required: false, description: 'Filtrar por fecha específica (YYYY-MM-DD)' })
+  @ApiResponse({ status: 200, description: 'Citas de la institución devueltas.' })
   findByInstitution(
     @Param('institutionId') institutionId: string,
     @Query('status') status?: string,
@@ -40,8 +53,10 @@ export class AppointmentsController {
     return this.appointmentsService.findAllByInstitution(institutionId, { status, branchId, date });
   }
 
-  @Get('clients/:institutionId')
+  @Get('institutionClients/:institutionId')
   @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER')
+  @ApiOperation({ summary: 'Obtener lista de clientes de una institución' })
+  @ApiResponse({ status: 200, description: 'Clientes devueltos.' })
   getClients(@Param('institutionId') institutionId: string, @Request() req) {
     return this.appointmentsService.getInstitutionClients(
       institutionId,
@@ -50,8 +65,10 @@ export class AppointmentsController {
     );
   }
 
-  @Get(':id')
+  @Get('appointmentDetail/:id')
   @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER', 'CLIENT')
+  @ApiOperation({ summary: 'Obtener detalles de una cita específica' })
+  @ApiResponse({ status: 200, description: 'Cita encontrada.' })
   findOne(@Param('id') id: string, @Request() req) {
     return this.appointmentsService.findOne(
       id,
@@ -61,8 +78,10 @@ export class AppointmentsController {
     );
   }
 
-  @Patch(':id')
+  @Patch('updateAppointment/:id')
   @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER')
+  @ApiOperation({ summary: 'Actualizar una cita (Modificar estado, notas)' })
+  @ApiResponse({ status: 200, description: 'Cita actualizada.' })
   update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto, @Request() req) {
     return this.appointmentsService.update(
       id,
@@ -73,14 +92,18 @@ export class AppointmentsController {
     );
   }
 
-  @Patch(':id/cancel')
+  @Patch('cancelAppointment/:id')
   @Roles('CLIENT')
+  @ApiOperation({ summary: 'Cancelar una cita (Solo para Clientes)' })
+  @ApiResponse({ status: 200, description: 'Cita cancelada correctamente.' })
   cancel(@Param('id') id: string, @Request() req) {
     return this.appointmentsService.cancel(id, req.user.sub);
   }
 
-  @Delete(':id')
+  @Delete('deleteAppointment/:id')
   @Roles('SAAS_ADMIN')
+  @ApiOperation({ summary: 'Eliminar una cita permanentemente (Solo SAAS_ADMIN)' })
+  @ApiResponse({ status: 200, description: 'Cita eliminada.' })
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
   }

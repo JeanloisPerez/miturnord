@@ -1,0 +1,7 @@
+SAAS Admin admin@miturnord.com already existed. Password reset to default.
+
+--- SAAS ADMIN CREDENTIALS ---
+Email: admin@miturnord.com
+Password: admin123
+------------------------------
+

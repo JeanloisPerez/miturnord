@@ -15,6 +15,10 @@ export class MultiTenantGuard implements CanActivate {
             throw new ForbiddenException('User not authenticated');
         }
 
+        if (user.type === 'SAAS_ADMIN' || (user.roles && user.roles.includes('SAAS_ADMIN'))) {
+            return true;
+        }
+
         const institutionId =
             request.params.institution_id ||
             request.query.institution_id ||

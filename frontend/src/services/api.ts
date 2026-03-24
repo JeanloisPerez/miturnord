@@ -8,9 +8,15 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Interceptor: auto-logout on 401
+// Interceptor: auto-logout on 401 and response unwrapping
 api.interceptors.response.use(
-    (r) => r,
+    (r) => {
+        // If the backend returns the standardized { statusCode, messages, data }
+        if (r.data && typeof r.data === 'object' && 'data' in r.data && 'messages' in r.data) {
+            r.data = r.data.data;
+        }
+        return r;
+    },
     (error) => {
         if (error.response?.status === 401) {
             localStorage.removeItem('access_token');

@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -62,6 +62,19 @@ enum UserStatus {
   active
   blocked
   deleted
+}
+
+// ─────────────────────────────────────────────
+// SAAS ADMIN
+// ─────────────────────────────────────────────
+
+model SaasAdmin {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  full_name     String?
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
 
 // ─────────────────────────────────────────────
@@ -266,15 +279,40 @@ model BlockedTime {
 model BusinessRule {
   id                String   @id @default(uuid())
   institution_id    String   @unique
-  auto_confirm      Boolean  @default(true)
-  buffer_minutes    Int      @default(0)
-  max_per_slot      Int      @default(1)
-  no_show_minutes   Int      @default(30)
-  advance_book_days Int      @default(30)
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  auto_confirm         Boolean  @default(true)
+  buffer_minutes       Int      @default(0)
+  max_per_slot         Int      @default(1)
+  no_show_minutes      Int      @default(30)
+  advance_book_days    Int      @default(30)
+  reminder_days_before Int      @default(1)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 
   institution Institution @relation(fields: [institution_id], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// SYSTEM SETTINGS (SAAS Admin Config)
+// ─────────────────────────────────────────────
+
+model SystemSetting {
+  id                                String   @id @default("singleton")
+  cron_reminder_frequency_minutes   Int      @default(60)
+  log_retention_days                Int      @default(7)
+  updated_at                        DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// REMINDER LOGS
+// ─────────────────────────────────────────────
+
+model ReminderLog {
+  id             String   @id @default(uuid())
+  appointment_id String
+  user_email     String
+  status         String   // e.g. "SUCCESS", "FAILED"
+  error_details  String?
+  created_at     DateTime @default(now())
 }
 
 // ─────────────────────────────────────────────
@@ -291,6 +329,7 @@ model Appointment {
   user_id             String
   branch_id           String?
   rescheduled_from_id String?
+  reminder_sent       Boolean           @default(false)
   created_at          DateTime          @default(now())
   updated_at          DateTime          @updatedAt
 

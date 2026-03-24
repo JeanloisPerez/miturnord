@@ -128,6 +128,29 @@ export class AuthService {
         return this.generateToken(user);
     }
 
+    async adminLogin(email: string, password: string) {
+        const admin = await this.prisma.saasAdmin.findUnique({
+            where: { email }
+        });
+
+        if (!admin) throw new UnauthorizedException('Credenciales inválidas');
+
+        const valid = await bcrypt.compare(password, admin.password_hash);
+        if (!valid) throw new UnauthorizedException('Credenciales inválidas');
+
+        const payload = {
+            sub: admin.id,
+            email: admin.email,
+            type: 'SAAS_ADMIN',
+            role: 'SAAS_ADMIN',
+            roles: ['SAAS_ADMIN'],
+        };
+
+        return {
+            access_token: await this.jwtService.signAsync(payload),
+        };
+    }
+
     private async generateToken(user: any) {
         const globalRoles = user.roles.map(r => r.role.name);
 

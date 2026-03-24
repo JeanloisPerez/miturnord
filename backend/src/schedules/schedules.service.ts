@@ -1,16 +1,24 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 
 export class CreateScheduleDto {
+    @ApiProperty({ example: 'uuid-institucion', description: 'ID de la institución' })
     institution_id: string;
+    @ApiProperty({ example: 1, description: 'Día de la semana (0=Dom, ..., 6=Sab)' })
     day_of_week: number;   // 0=Sun … 6=Sat
+    @ApiProperty({ example: '08:00', description: 'Hora de inicio (HH:MM)' })
     start_time: string;    // "HH:MM"
+    @ApiProperty({ example: '17:00', description: 'Hora de fin (HH:MM)' })
     end_time: string;
 }
 
 export class UpdateScheduleDto {
+    @ApiProperty({ example: '09:00', description: 'Hora de inicio (HH:MM)', required: false })
     start_time?: string;
+    @ApiProperty({ example: '18:00', description: 'Hora de fin (HH:MM)', required: false })
     end_time?: string;
+    @ApiProperty({ example: true, description: 'Indica si el horario está activo', required: false })
     active?: boolean;
 }
 

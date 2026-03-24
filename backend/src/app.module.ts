@@ -15,10 +15,15 @@ import { ReportsModule } from './reports/reports.module';
 import { UploadModule } from './upload/upload.module';
 import { UsersModule } from './users/users.module';
 import { CustomFieldsModule } from './custom-fields/custom-fields.module';
+import { EmailsModule } from './emails/emails.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { RemindersModule } from './reminders/reminders.module';
+import { SystemSettingsModule } from './system-settings/system-settings.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     InstitutionTypesModule,
@@ -34,6 +39,9 @@ import { CustomFieldsModule } from './custom-fields/custom-fields.module';
     UploadModule,
     UsersModule,
     CustomFieldsModule,
+    EmailsModule,
+    RemindersModule,
+    SystemSettingsModule,
   ],
 })
 export class AppModule { }
