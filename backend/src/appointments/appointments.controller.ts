@@ -22,7 +22,17 @@ export class AppointmentsController {
   @ApiResponse({ status: 201, description: 'Cita creada exitosamente.' })
   @ApiResponse({ status: 409, description: 'Horario no disponible.' })
   create(@Body() dto: CreateAppointmentDto, @Request() req) {
-    return this.appointmentsService.create(dto, req.user.sub);
+    return this.appointmentsService.create({ ...dto, booked_by_staff: false }, req.user.sub);
+  }
+
+  @Post('staff')
+  @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER', 'STAFF')
+  @ApiOperation({ summary: 'Crear una cita internamente por el staff (incluye walk-ins)' })
+  @ApiResponse({ status: 201, description: 'Cita creada exitosamente por el staff.' })
+  @ApiResponse({ status: 409, description: 'Horario no disponible.' })
+  createByStaff(@Body() dto: CreateAppointmentDto, @Request() req) {
+    // Forzamos el flag para que el service sepa que es una reserva interna
+    return this.appointmentsService.create({ ...dto, booked_by_staff: true }, req.user.sub);
   }
 
   @Get('appointmentList')
@@ -92,12 +102,27 @@ export class AppointmentsController {
     );
   }
 
+  @Patch('reschedule/:id')
+  @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER', 'CLIENT')
+  @ApiOperation({ summary: 'Reagendar una cita (Cliente o Dueño)' })
+  @ApiResponse({ status: 200, description: 'Cita reagendada exitosamente.' })
+  @ApiResponse({ status: 409, description: 'Nuevo horario no disponible.' })
+  reschedule(@Param('id') id: string, @Body() dto: UpdateAppointmentDto, @Request() req) {
+    return this.appointmentsService.update(
+      id,
+      dto,
+      req.user.sub,
+      req.user.role,
+      req.user.institutionId,
+    );
+  }
+
   @Patch('cancelAppointment/:id')
-  @Roles('CLIENT')
-  @ApiOperation({ summary: 'Cancelar una cita (Solo para Clientes)' })
+  @Roles('CLIENT', 'INSTITUTION_OWNER', 'SAAS_ADMIN')
+  @ApiOperation({ summary: 'Cancelar una cita (Cliente o Institución)' })
   @ApiResponse({ status: 200, description: 'Cita cancelada correctamente.' })
   cancel(@Param('id') id: string, @Request() req) {
-    return this.appointmentsService.cancel(id, req.user.sub);
+    return this.appointmentsService.cancel(id, req.user.sub, req.user.role, req.user.institutionId);
   }
 
   @Delete('deleteAppointment/:id')

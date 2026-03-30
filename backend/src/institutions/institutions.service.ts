@@ -44,6 +44,7 @@ export class InstitutionsService {
     return this.prisma.institution.findMany({
       where: {
         status: 'active',
+        is_public: true,          // Solo instituciones que eligieron ser públicas
         ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
         ...(institutionTypeId ? { institution_type_id: institutionTypeId } : {}),
       },

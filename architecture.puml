@@ -1,0 +1,197 @@
+@startuml MiTurnoRD - Arquitectura del Sistema
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam roundcorner 12
+skinparam shadowing false
+skinparam defaultFontName "Helvetica Neue"
+skinparam defaultFontSize 13
+
+skinparam node {
+  BackgroundColor #E8F4FD
+  BorderColor #2196F3
+  BorderThickness 2
+  FontColor #1A237E
+}
+
+skinparam rectangle {
+  BackgroundColor #F3F8FF
+  BorderColor #1565C0
+  BorderThickness 1.5
+}
+
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #42A5F5
+  BorderThickness 1.5
+  FontColor #0D47A1
+}
+
+skinparam database {
+  BackgroundColor #EDE7F6
+  BorderColor #7B1FA2
+  BorderThickness 2
+  FontColor #4A148C
+}
+
+skinparam arrow {
+  Color #546E7A
+  Thickness 1.5
+}
+
+title <size:20><b>MiTurnoRD — Arquitectura del Sistema</b></size>\n<size:13>Plataforma SaaS Multi-Tenant para Agendamiento de Citas</size>
+
+'═══════════════════════════════════════════════════════
+' ACTORES / CLIENTES
+'═══════════════════════════════════════════════════════
+rectangle "Actores" as Actors #EFF8FF {
+  actor "Cliente\n(Usuario Final)" as UserClient #lightblue
+  actor "Propietario\n(Owner)" as Owner #lightyellow
+  actor "Super Admin\n(SaaS)" as SaasAdmin #lightcoral
+}
+
+'═══════════════════════════════════════════════════════
+' FRONTENDS
+'═══════════════════════════════════════════════════════
+node "Frontend — Cliente & Propietario\n<size:11>//React + Vite + TypeScript//</size>" as FrontendMain {
+
+  rectangle "Vistas de Cliente" as ClientViews {
+    component "Listado de Instituciones" as ClientInstitutions
+    component "Detalle de Institución / Sucursal" as ClientDetail
+    component "Agendamiento de Citas" as ClientBook
+    component "Mis Citas (reprogramar / cancelar)" as ClientAppts
+  }
+
+  rectangle "Vistas de Propietario (Owner)" as OwnerViews {
+    component "Dashboard de Citas" as OwnerAppts
+    component "Gestión de Servicios" as OwnerServices
+    component "Gestión de Sucursales" as OwnerBranches
+    component "Gestión de Horarios" as OwnerSchedules
+    component "Tiempos Bloqueados" as OwnerBlocked
+    component "Reglas de Negocio" as OwnerRules
+    component "Campos Personalizados" as OwnerFields
+    component "Reportes" as OwnerReports
+  }
+
+  component "Capa API (api.ts + React Context)" as APILayer
+}
+
+node "Frontend Admin — SaaS\n<size:11>//React + Vite + TypeScript//</size>" as FrontendAdmin {
+  component "Gestión de Instituciones" as AdminInstitutions
+  component "Gestión de Tipos" as AdminTypes
+  component "Configuraciones del Sistema" as AdminSettings
+  component "Gestión de Admins" as AdminUsers
+}
+
+'═══════════════════════════════════════════════════════
+' BACKEND — NestJS
+'═══════════════════════════════════════════════════════
+node "Backend — API REST\n<size:11>//NestJS + TypeScript//</size>" as Backend {
+
+  rectangle "Capa de Autenticación" as AuthLayer {
+    component "[AuthModule]\nJWT + Guards" as AuthModule
+    component "[UsersModule]\nGestión de usuarios" as UsersModule
+  }
+
+  rectangle "Núcleo Multi-Tenant" as CoreLayer {
+    component "[InstitutionsModule]\nInstituciones" as InstitutionsModule
+    component "[InstitutionTypesModule]\nTipos" as InstitutionTypesModule
+    component "[BranchesModule]\nSucursales" as BranchesModule
+    component "[ServicesModule]\nServicios" as ServicesModule
+    component "[CustomFieldsModule]\nCampos Dinámicos" as CustomFieldsModule
+  }
+
+  rectangle "Motor de Disponibilidad" as SchedulingLayer {
+    component "[SchedulesModule]\nHorarios semanales" as SchedulesModule
+    component "[BlockedTimesModule]\nBloques manuales" as BlockedTimesModule
+    component "[BusinessRulesModule]\nReglas de negocio" as BusinessRulesModule
+    component "[SchedulingEngineModule]\nMotor de slots" as SchedulingEngineModule
+  }
+
+  rectangle "Gestión de Citas" as AppointmentLayer {
+    component "[AppointmentsModule]\nCRUD + Reagendamiento" as AppointmentsModule
+    component "[ReportsModule]\nReportes & Estadísticas" as ReportsModule
+  }
+
+  rectangle "Servicios Transversales" as TransversalLayer {
+    component "[EmailsModule]\nnodemailer SMTP" as EmailsModule
+    component "[RemindersModule]\nCron Job (recordatorios)" as RemindersModule
+    component "[UploadModule]\nSubida de archivos" as UploadModule
+    component "[SystemSettingsModule]\nConfig SaaS" as SystemSettingsModule
+  }
+
+  component "[PrismaModule]\nORM / Database Client" as PrismaModule
+}
+
+'═══════════════════════════════════════════════════════
+' INFRAESTRUCTURA
+'═══════════════════════════════════════════════════════
+database "PostgreSQL\n<size:11>//Base de datos relacional//</size>" as DB {
+  component "User / Role / AuthSession" as tblAuth
+  component "Institution / InstitutionType" as tblInstitution
+  component "Branch / BranchService" as tblBranch
+  component "Service / CustomField" as tblService
+  component "Schedule / BlockedTime" as tblSchedule
+  component "BusinessRule / SystemSetting" as tblRules
+  component "Appointment / FieldResponse" as tblAppointment
+  component "ReminderLog / SaasAdmin" as tblLogs
+}
+
+rectangle "Servicios Externos" as ExternalServices #FFF8E1 {
+  component "SMTP Server\n(Email Delivery)" as SMTP
+  component "Almacenamiento de Archivos\n(uploads locales)" as FileStorage
+}
+
+'═══════════════════════════════════════════════════════
+' CONEXIONES — ACTORES → FRONTENDS
+'═══════════════════════════════════════════════════════
+UserClient -down-> ClientViews : "Navega / Agenda"
+Owner -down-> OwnerViews : "Gestiona institución"
+SaasAdmin -down-> FrontendAdmin : "Administra la plataforma"
+
+'═══════════════════════════════════════════════════════
+' CONEXIONES — FRONTENDS → BACKEND (REST API HTTP/JSON)
+'═══════════════════════════════════════════════════════
+APILayer -right-> Backend : "HTTP REST\n(Bearer JWT)"
+FrontendAdmin -right-> Backend : "HTTP REST\n(SaaS Admin JWT)"
+
+'═══════════════════════════════════════════════════════
+' CONEXIONES INTERNAS BACKEND (flujos clave)
+'═══════════════════════════════════════════════════════
+AuthModule ..> UsersModule : "valida usuario"
+AppointmentsModule -down-> SchedulingEngineModule : "verifica slots disponibles"
+SchedulingEngineModule ..> SchedulesModule : "consulta horarios"
+SchedulingEngineModule ..> BlockedTimesModule : "excluye bloques"
+SchedulingEngineModule ..> BusinessRulesModule : "aplica reglas"
+SchedulingEngineModule ..> AppointmentsModule : "excluye citas existentes"
+AppointmentsModule -right-> EmailsModule : "dispara email\n(confirmación/cancelación)"
+RemindersModule -right-> EmailsModule : "dispara recordatorios\n(cron diario)"
+RemindersModule ..> SystemSettingsModule : "lee frecuencia"
+AppointmentsModule ..> CustomFieldsModule : "guarda respuestas"
+ServicesModule ..> BranchesModule : "asigna servicios\na sucursales"
+
+'═══════════════════════════════════════════════════════
+' CONEXIONES — BACKEND → DB
+'═══════════════════════════════════════════════════════
+PrismaModule -down-> DB : "Prisma ORM\n(queries)"
+AuthModule ..> PrismaModule
+UsersModule ..> PrismaModule
+InstitutionsModule ..> PrismaModule
+BranchesModule ..> PrismaModule
+ServicesModule ..> PrismaModule
+SchedulesModule ..> PrismaModule
+BlockedTimesModule ..> PrismaModule
+BusinessRulesModule ..> PrismaModule
+AppointmentsModule ..> PrismaModule
+CustomFieldsModule ..> PrismaModule
+ReportsModule ..> PrismaModule
+RemindersModule ..> PrismaModule
+SystemSettingsModule ..> PrismaModule
+UploadModule ..> PrismaModule
+
+'═══════════════════════════════════════════════════════
+' SERVICIOS EXTERNOS
+'═══════════════════════════════════════════════════════
+EmailsModule -down-> SMTP : "SMTP / TLS"
+UploadModule -down-> FileStorage : "multipart upload"
+
+@enduml

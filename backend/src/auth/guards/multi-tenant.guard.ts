@@ -12,7 +12,7 @@ export class MultiTenantGuard implements CanActivate {
         const user = request.user;
 
         if (!user) {
-            throw new ForbiddenException('User not authenticated');
+            throw new ForbiddenException('Usuario no autenticado');
         }
 
         if (user.type === 'SAAS_ADMIN' || (user.roles && user.roles.includes('SAAS_ADMIN'))) {
@@ -25,11 +25,11 @@ export class MultiTenantGuard implements CanActivate {
             request.body.institution_id;
 
         if (!institutionId) {
-            throw new ForbiddenException('Institution context required');
+            throw new ForbiddenException('Contexto de institución requerido');
         }
 
         if (!user.institutions || user.institutions.length === 0) {
-            throw new ForbiddenException('No institution memberships found');
+            throw new ForbiddenException('No se encontraron membresías de institución');
         }
 
         const membership = user.institutions.find(
@@ -38,7 +38,7 @@ export class MultiTenantGuard implements CanActivate {
 
         if (!membership) {
             throw new ForbiddenException(
-                'You do not belong to this institution',
+                'No perteneces a esta institución',
             );
         }
 

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Columns, List, Search, Clock, Eye, X, Download } from 'lucide-react';
-import { getAppointmentsByInstitution, updateAppointment } from '../../services/api';
-import { STO, SL, KANBAN_COLS, SC, Spinner, Empty, Hdr, Avatar, Badge } from './ownerShared';
+import { Columns, List, Search, Clock, X, Download, MapPin, CalendarDays, MoreVertical } from 'lucide-react';
+import { getAppointmentsByInstitution, updateAppointment, cancelAppointment } from '../../services/api';
+import { STO, SL, Spinner, Empty, Hdr, Avatar, Badge, btn } from './ownerShared';
+import OwnerNewAppointmentModal from './OwnerNewAppointmentModal';
 
 export default function OwnerAppointmentsView({ instId }: { instId: string }) {
     const [appts, setAppts] = useState<any[]>([]);
@@ -10,6 +11,7 @@ export default function OwnerAppointmentsView({ instId }: { instId: string }) {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [selAppt, setSelAppt] = useState<any>(null);
+    const [isNewModalOpen, setIsNewModalOpen] = useState(false);
 
     const load = useCallback(() => {
         setLoading(true);
@@ -21,19 +23,44 @@ export default function OwnerAppointmentsView({ instId }: { instId: string }) {
     useEffect(() => { load(); }, [load]);
 
     const handleStatus = async (id: string, status: string) => {
-        await updateAppointment(id, { status });
-        setAppts(p => p.map(a => a.id === id ? { ...a, status } : a));
+        try {
+            if (status === 'CANCELLED') await cancelAppointment(id);
+            else await updateAppointment(id, { status });
+            setAppts(p => p.map(a => a.id === id ? { ...a, status } : a));
+            if (selAppt?.id === id) setSelAppt((p: any) => ({ ...p, status }));
+        } catch (e) {
+            alert('Error al actualizar el estado de la cita');
+        }
     };
 
-    const filtered = appts.filter(a => !search || a.user?.full_name?.toLowerCase().includes(search.toLowerCase()) || a.service?.name?.toLowerCase().includes(search.toLowerCase()));
+    const handleDrop = (e: React.DragEvent, status: string) => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('apptId');
+        if (id) handleStatus(id, status);
+    };
+
+    const filtered = appts.filter(a => !search || a.user?.full_name?.toLowerCase().includes(search.toLowerCase()) || a.service?.name?.toLowerCase().includes(search.toLowerCase()) || a.walk_in_name?.toLowerCase().includes(search.toLowerCase()));
+
+    const LOCAL_KANBAN_COLS = [
+        ['PENDING', 'Pendiente', 'border-t-4 border-t-amber-400'],
+        ['CONFIRMED', 'Confirmada', 'border-t-4 border-t-blue-500'],
+        ['COMPLETED', 'Completada', 'border-t-4 border-t-green-500'],
+        ['CANCELLED', 'Cancelada', 'border-t-4 border-t-red-500'],
+    ] as const;
 
     return (
         <div className="space-y-4 max-w-full">
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <Hdr title="Citas" sub="Gestiona todas las citas de tu institución" />
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${viewMode === 'kanban' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}><Columns size={13} />Kanban</button>
-                    <button onClick={() => setViewMode('list')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${viewMode === 'list' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}><List size={13} />Lista</button>
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setIsNewModalOpen(true)} className={`${btn} flex items-center gap-1.5`}>
+                        + Nueva Cita
+                    </button>
+                    <div className="h-6 w-[1px] bg-gray-200"></div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setViewMode('kanban')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${viewMode === 'kanban' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}><Columns size={13} />Kanban</button>
+                        <button onClick={() => setViewMode('list')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${viewMode === 'list' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}><List size={13} />Lista</button>
+                    </div>
                 </div>
             </div>
             <div className="flex gap-3 flex-wrap">
@@ -43,43 +70,44 @@ export default function OwnerAppointmentsView({ instId }: { instId: string }) {
                 </div>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     <option value="">Todos los estados</option>
-                    {STO.map(s => <option key={s} value={s}>{SL[s]}</option>)}
+                    {STO.map(s => <option key={s} value={s}>{SL[s as keyof typeof SL]}</option>)}
                 </select>
             </div>
 
             {loading ? <Spinner /> : viewMode === 'kanban' ? (
-                <div className="flex gap-4 overflow-x-auto pb-4 items-start">
-                    {KANBAN_COLS.map(([status, label]) => {
+                <div className="flex gap-4 overflow-x-auto pb-4 items-start pt-2">
+                    {LOCAL_KANBAN_COLS.map(([status, label, borderClass]) => {
                         const col = filtered.filter(a => a.status === status);
                         return (
-                            <div key={status} className="shrink-0 w-72">
-                                <div className={`flex items-center justify-between mb-3 px-1`}>
-                                    <span className="text-sm font-semibold text-gray-700">{label}</span>
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${SC[status]}`}>{col.length}</span>
+                            <div 
+                                key={status} 
+                                onDragOver={e => e.preventDefault()} 
+                                onDrop={e => handleDrop(e, status)}
+                                className={`shrink-0 w-72 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 ${borderClass}`}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <span className="text-sm font-bold text-gray-900">{label}</span>
+                                    <span className="text-xs font-bold text-gray-500">{col.length}</span>
                                 </div>
                                 <div className="space-y-3 min-h-[6rem]">
                                     {col.map(a => (
-                                        <div key={a.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex items-start gap-2">
-                                                    <Avatar name={a.user?.full_name || '?'} size={8} />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-gray-900 font-semibold text-sm truncate">{a.user?.full_name}</p>
-                                                        <p className="text-gray-500 text-xs truncate" title={a.service?.name}>{a.service?.name}</p>
-                                                    </div>
-                                                </div>
-                                                <button onClick={() => setSelAppt(a)} className="text-gray-400 hover:text-blue-600 transition p-1 shrink-0"><Eye size={16} /></button>
+                                        <div 
+                                            key={a.id} 
+                                            draggable 
+                                            onDragStart={e => e.dataTransfer.setData('apptId', a.id)}
+                                            onClick={() => setSelAppt(a)} 
+                                            className="bg-white border text-left border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-grab active:cursor-grabbing"
+                                        >
+                                            <p className="text-gray-900 font-bold text-sm truncate">{a.user?.full_name || a.walk_in_name || 'Desconocido'}</p>
+                                            <p className="text-gray-500 text-xs truncate mt-0.5">{a.service?.name}</p>
+                                            
+                                            <div className="flex items-center justify-between text-xs text-gray-400 mt-4 pt-3 border-t border-gray-50">
+                                                <div className="flex items-center gap-1.5"><CalendarDays size={12} className="text-gray-400"/>{new Date(a.date).toLocaleDateString('es-DO', { month: '2-digit', day: '2-digit' })} · {new Date(a.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</div>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
-                                                <Clock size={11} />
-                                                {new Date(a.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' })} · {new Date(a.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                            <select value={a.status} onChange={e => handleStatus(a.id, e.target.value)} className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white">
-                                                {STO.map(s => <option key={s} value={s}>{SL[s]}</option>)}
-                                            </select>
+                                            <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-2 truncate"><MapPin size={12} className="text-gray-400"/>{a.branch?.name || 'Sucursal Centro'}</div>
                                         </div>
                                     ))}
-                                    {col.length === 0 && <div className="border-2 border-dashed border-gray-100 rounded-xl h-20 flex items-center justify-center text-gray-300 text-xs">Sin citas</div>}
+                                    {col.length === 0 && <div className="border-2 border-dashed border-gray-100 rounded-xl h-24 flex items-center justify-center text-gray-400 text-xs pointer-events-none">Arrastra citas aquí</div>}
                                 </div>
                             </div>
                         );
@@ -87,23 +115,49 @@ export default function OwnerAppointmentsView({ instId }: { instId: string }) {
                 </div>
             ) : (
                 filtered.length === 0 ? <Empty msg="Sin citas" /> : (
-                    <div className="space-y-3">
-                        {filtered.map(a => (
-                            <div key={a.id} className="bg-white border border-gray-200 rounded-xl px-5 py-4 flex items-center gap-4 flex-wrap">
-                                <Avatar name={a.user?.full_name || '?'} />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-gray-900 font-semibold text-sm">{a.user?.full_name}</p>
-                                    <p className="text-gray-500 text-xs">{a.service?.name} · {new Date(a.date).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' })}</p>
-                                </div>
-                                <button onClick={() => setSelAppt(a)} className="text-gray-400 hover:text-blue-600 transition p-2 border border-gray-200 rounded-lg hover:bg-blue-50">
-                                    <Eye size={16} />
-                                </button>
-                                <Badge status={a.status} />
-                                <select value={a.status} onChange={e => handleStatus(a.id, e.target.value)} className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none bg-white">
-                                    {STO.map(s => <option key={s} value={s}>{SL[s]}</option>)}
-                                </select>
-                            </div>
-                        ))}
+                    <div className="bg-white border text-left border-gray-100 shadow-sm rounded-2xl overflow-hidden mt-4">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-white text-gray-500 font-semibold border-b border-gray-100">
+                                <tr>
+                                    <th className="py-4 px-6 font-semibold whitespace-nowrap">Fecha & Hora</th>
+                                    <th className="py-4 px-6 font-semibold whitespace-nowrap">Cliente</th>
+                                    <th className="py-4 px-6 font-semibold whitespace-nowrap">Servicio</th>
+                                    <th className="py-4 px-6 font-semibold whitespace-nowrap">Sucursal</th>
+                                    <th className="py-4 px-6 font-semibold text-center whitespace-nowrap">Estado</th>
+                                    <th className="py-4 px-6 font-semibold text-center whitespace-nowrap">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {filtered.map(a => (
+                                    <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="py-4 px-6 whitespace-nowrap">
+                                            <p className="text-gray-900 font-semibold flex items-center gap-2"><CalendarDays size={14} className="text-gray-400" /> {new Date(a.date).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' })}</p>
+                                            <p className="text-gray-500 text-xs pl-6">{new Date(a.date).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <p className="text-gray-900 font-bold truncate">{a.user?.full_name || a.walk_in_name || 'Desconocido'}</p>
+                                            {a.user?.email && <p className="text-gray-500 text-xs truncate">{a.user?.email}</p>}
+                                        </td>
+                                        <td className="py-4 px-6 text-gray-700 font-medium truncate">{a.service?.name}</td>
+                                        <td className="py-4 px-6 text-gray-500 text-sm truncate">
+                                            <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400"/> {a.branch?.name || 'Sucursal Centro'}</div>
+                                        </td>
+                                        <td className="py-4 px-6 text-center"><Badge status={a.status} /></td>
+                                        <td className="py-4 px-6 flex items-center justify-center gap-2 mt-2">
+                                            <select 
+                                                value={a.status} 
+                                                onChange={e => handleStatus(a.id, e.target.value)}
+                                                onClick={e => e.stopPropagation()}
+                                                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 bg-white cursor-pointer"
+                                            >
+                                                {STO.map(s => <option key={s} value={s}>{SL[s as keyof typeof SL]}</option>)}
+                                            </select>
+                                            <button onClick={() => setSelAppt(a)} className="text-gray-400 hover:text-blue-600 transition p-1" title="Ver Detalles"><MoreVertical size={16} /></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )
             )}
@@ -191,13 +245,32 @@ export default function OwnerAppointmentsView({ instId }: { instId: string }) {
                             )}
                         </div>
 
-                        <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end">
-                            <button onClick={() => setSelAppt(null)} className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition">
+                        <div className="p-5 border-t border-gray-100 bg-gray-50 flex flex-wrap-reverse justify-between items-center gap-4">
+                            <button onClick={() => setSelAppt(null)} className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition shadow-sm">
                                 Cerrar ventana
                             </button>
+                            <div className="flex gap-2 flex-wrap">
+                                {selAppt.status !== 'CONFIRMED' && selAppt.status !== 'CANCELLED' && selAppt.status !== 'COMPLETED' && (
+                                    <button onClick={() => handleStatus(selAppt.id, 'CONFIRMED')} className="px-4 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-sm">Confirmar</button>
+                                )}
+                                {selAppt.status !== 'COMPLETED' && selAppt.status !== 'CANCELLED' && (
+                                    <button onClick={() => handleStatus(selAppt.id, 'COMPLETED')} className="px-4 py-2.5 bg-green-500 text-white text-sm font-bold rounded-xl hover:bg-green-600 transition shadow-sm">Completar</button>
+                                )}
+                                {selAppt.status !== 'CANCELLED' && (
+                                    <button onClick={() => handleStatus(selAppt.id, 'CANCELLED')} className="px-4 py-2.5 bg-red-100 text-red-700 text-sm font-bold rounded-xl hover:bg-red-200 transition">Cancelar</button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {isNewModalOpen && (
+                <OwnerNewAppointmentModal
+                    instId={instId}
+                    onClose={() => setIsNewModalOpen(false)}
+                    onRefresh={load}
+                />
             )}
         </div>
     );

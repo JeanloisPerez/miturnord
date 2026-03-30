@@ -1,5 +1,5 @@
 import {
-    Controller, Get, Patch, Body, UseGuards, Request,
+    Controller, Get, Patch, Body, UseGuards, Request, Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -64,5 +64,15 @@ export class UsersController {
     @ApiOperation({ summary: 'SAAS_ADMIN: Lista completa de todos los usuarios' })
     adminList() {
         return this.usersService.adminListUsers();
+    }
+
+    /** GET /users/search — búsqueda de clientes para reserva interna */
+    @Get('search')
+    @UseGuards(RolesGuard)
+    @Roles('SAAS_ADMIN', 'INSTITUTION_OWNER', 'STAFF')
+    @ApiOperation({ summary: 'Buscar usuarios por nombre, email o teléfono (para agendamiento interno)' })
+    searchUsers(@Query('q') query: string) {
+        if (!query || query.length < 2) return [];
+        return this.usersService.searchUsers(query);
     }
 }

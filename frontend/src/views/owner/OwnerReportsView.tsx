@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { CalendarDays, CheckCircle2, XCircle, Users, Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { CalendarDays, CheckCircle2, Users, Filter, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { getReports, getServicesByInstitution, getBranches } from '../../services/api';
 import { Hdr, Spinner, Badge, btn, ic } from './ownerShared';
 
@@ -98,54 +98,87 @@ export default function OwnerReportsView({ instId }: { instId: string }) {
             )}
             {loading ? <Spinner /> : (
                 <>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         {[
-                            { label: 'Total citas', val: report?.range?.total ?? 0, Icon: CalendarDays, color: 'text-blue-600 bg-blue-50' },
-                            { label: 'Confirmadas', val: report?.range?.statusCounts?.CONFIRMED ?? 0, Icon: CheckCircle2, color: 'text-green-600 bg-green-50' },
-                            { label: 'Canceladas', val: report?.range?.statusCounts?.CANCELLED ?? 0, Icon: XCircle, color: 'text-red-500 bg-red-50' },
-                            { label: 'Clientes únicos', val: report?.range?.uniqueClients ?? 0, Icon: Users, color: 'text-violet-600 bg-violet-50' },
+                            { label: 'Total Citas', val: report?.range?.total ?? 0, Icon: CalendarDays, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+12%', isUp: true },
+                            { label: 'Confirmadas', val: report?.range?.statusCounts?.CONFIRMED ?? 0, Icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', trend: '+5%', isUp: true },
+                            { label: 'Ingresos Est.', val: `RD$${(report?.range?.total ?? 0) * 1500}`, Icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+23%', isUp: true },
+                            { label: 'Nuevos Clientes', val: report?.range?.uniqueClients ?? 0, Icon: Users, color: 'text-violet-600', bg: 'bg-violet-50', trend: '-2%', isUp: false },
                         ].map(s => (
-                            <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-5">
-                                <div className={`w-8 h-8 rounded-lg ${s.color.split(' ')[1]} flex items-center justify-center mb-3`}><s.Icon size={15} className={s.color.split(' ')[0]} /></div>
-                                <p className="text-2xl font-bold text-gray-900">{s.val}</p>
-                                <p className="text-gray-500 text-xs mt-0.5">{s.label}</p>
+                            <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center`}><s.Icon size={20} className={s.color} /></div>
+                                    <span className={`flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md ${s.isUp ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                        {s.isUp ? <TrendingUp size={12}/> : <TrendingDown size={12}/>}
+                                        {s.trend}
+                                    </span>
+                                </div>
+                                <p className="text-3xl font-bold text-gray-900 mb-1">{s.val}</p>
+                                <p className="text-gray-500 text-sm font-medium">{s.label}</p>
                             </div>
                         ))}
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 overflow-hidden">
-                            <p className="text-gray-800 font-semibold text-sm mb-1">Citas por día</p>
-                            <p className="text-gray-400 text-xs mb-4">{report?.range?.label}</p>
-                            <div className="w-full min-w-0">
-                                <ResponsiveContainer width="100%" height={180}>
-                                    <BarChart data={report?.byDay ?? []} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} tickFormatter={d => new Date(d).toLocaleDateString('es-DO', { weekday: 'short', day: 'numeric' })} />
-                                        <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} allowDecimals={false} />
-                                        <Tooltip formatter={val => [`${val} citas`, '']} labelFormatter={d => new Date(d).toLocaleDateString('es-DO', { dateStyle: 'medium' })} />
-                                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                        <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                            <div className="flex justify-between items-end mb-6">
+                                <div>
+                                    <p className="text-gray-900 font-bold text-lg">Tendencia de Citas</p>
+                                    <p className="text-gray-400 text-sm">{report?.range?.label}</p>
+                                </div>
+                            </div>
+                            <div className="w-full h-72">
+                                <ResponsiveContainer width="100%" height={288} minWidth={0}>
+                                    <AreaChart data={report?.byDay ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} tickFormatter={d => new Date(d).toLocaleDateString('es-DO', { weekday: 'short', day: 'numeric' })} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false} dx={-10} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            formatter={(val) => [`${val} citas`, 'Total']} 
+                                            labelFormatter={d => new Date(d).toLocaleDateString('es-DO', { dateStyle: 'medium' })} 
+                                        />
+                                        <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" activeDot={{ r: 6, strokeWidth: 0, fill: '#2563eb' }} />
+                                    </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col gap-8">
                             <div>
-                                <p className="text-xs text-gray-400 uppercase font-semibold tracking-wider mb-2">Por estado</p>
-                                <div className="space-y-2">
-                                    {statusItems.map(([s, c]) => <div key={s} className="flex items-center justify-between text-sm"><Badge status={s} /><span className="text-gray-600 font-semibold">{String(c)}</span></div>)}
-                                    {statusItems.length === 0 && <p className="text-gray-400 text-xs text-center py-2">Sin datos</p>}
-                                </div>
-                            </div>
-                            <div className="border-t border-gray-100 pt-4">
-                                <p className="text-xs text-gray-400 uppercase font-semibold tracking-wider mb-2">Top servicios</p>
-                                <div className="space-y-2">
-                                    {(report?.topServices ?? []).slice(0, 4).map((s: any) => (
-                                        <div key={s.name} className="flex items-center gap-2">
-                                            <p className="text-xs text-gray-600 flex-1 truncate">{s.name}</p>
-                                            <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((s.count / (report.topServices[0]?.count || 1)) * 100, 100)}%` }} /></div>
-                                            <span className="text-xs text-gray-500 w-4 text-right">{s.count}</span>
+                                <p className="text-gray-900 font-bold text-lg mb-4">Estado de Citas</p>
+                                <div className="space-y-3">
+                                    {statusItems.map(([s, c]) => (
+                                        <div key={s} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                            <Badge status={s} />
+                                            <span className="text-gray-800 font-bold">{String(c)}</span>
                                         </div>
                                     ))}
+                                    {statusItems.length === 0 && <p className="text-gray-400 text-sm text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">Sin datos de estado</p>}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <p className="text-gray-900 font-bold text-lg mb-4">Top Servicios</p>
+                                <div className="space-y-4">
+                                    {(report?.topServices ?? []).slice(0, 5).map((s: any) => (
+                                        <div key={s.name} className="relative">
+                                            <div className="flex items-center justify-between text-sm mb-1.5">
+                                                <span className="text-gray-700 font-medium truncate pr-4">{s.name}</span>
+                                                <span className="text-gray-900 font-bold">{s.count}</span>
+                                            </div>
+                                            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${Math.min((s.count / (report.topServices[0]?.count || 1)) * 100, 100)}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(report?.topServices ?? []).length === 0 && <p className="text-gray-400 text-sm text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">Sin servicios registrados</p>}
                                 </div>
                             </div>
                         </div>

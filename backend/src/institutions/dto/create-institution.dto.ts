@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsOptional, IsEmail } from 'class-validator';
+import { IsString, MinLength, IsOptional, IsEmail, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInstitutionDto {
@@ -40,5 +40,9 @@ export class CreateInstitutionDto {
     @IsOptional()
     @IsString()
     logo_url?: string;
-}
 
+    @ApiProperty({ example: false, description: 'Si true, la institución aparece en el marketplace público', required: false })
+    @IsOptional()
+    @IsBoolean()
+    is_public?: boolean;
+}

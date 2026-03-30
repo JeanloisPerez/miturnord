@@ -129,7 +129,7 @@ export default function AdminDashboard() {
                                     <div>
                                         <p className="text-gray-900 font-medium text-sm">{app.user?.full_name}</p>
                                         <p className="text-gray-500 text-sm">{app.institution?.name} · {app.service?.name}</p>
-                                        <p className="text-gray-400 text-xs mt-0.5">{new Date(app.date).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                                        <p className="text-gray-400 text-xs mt-0.5">{new Date(app.date).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short', hour12: false })}</p>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
                                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[app.status]}`}>{app.status}</span>

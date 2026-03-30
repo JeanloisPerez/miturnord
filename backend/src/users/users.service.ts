@@ -70,4 +70,21 @@ export class UsersService {
             orderBy: { created_at: 'desc' },
         });
     }
+
+    /** Búsqueda de usuarios por nombre, email o teléfono — usado en reserva interna del owner */
+    async searchUsers(query: string) {
+        return this.prisma.user.findMany({
+            where: {
+                status: 'active',
+                OR: [
+                    { full_name: { contains: query, mode: 'insensitive' } },
+                    { email: { contains: query, mode: 'insensitive' } },
+                    { phone: { contains: query, mode: 'insensitive' } },
+                ],
+            },
+            select: { id: true, full_name: true, email: true, phone: true },
+            take: 10,
+            orderBy: { full_name: 'asc' },
+        });
+    }
 }

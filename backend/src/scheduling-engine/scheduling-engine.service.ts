@@ -13,24 +13,25 @@ export class SchedulingEngineService {
     constructor(private prisma: PrismaService) { }
 
     /**
-     * Returns available HH:MM slots for a given branch, service, and date.
-     * If branchId is null, falls back to institution-level schedules.
+     * Devuelve los espacios (slots) HH:MM disponibles para una sucursal, servicio y fecha dados.
+     * Si branchId es null, recurre a los horarios de nivel de institución.
      */
     async getAvailableSlots(params: {
         institutionId: string;
         branchId?: string;
         serviceId: string;
-        date: string; // YYYY-MM-DD
+        date: string; // YYYYY-MM-DD
+        excludeAppointmentId?: string;
     }): Promise<string[]> {
-        const { institutionId, branchId, serviceId, date } = params;
+        const { institutionId, branchId, serviceId, date, excludeAppointmentId } = params;
 
-        // 1. Get service duration
+        // 1. Obtener duración del servicio
         const service = await this.prisma.service.findFirst({
             where: { id: serviceId, institution_id: institutionId, active: true },
         });
         if (!service) return [];
 
-        // 1b. If a branch is specified, verify the service is assigned to it
+        // Si se especifica una sucursal, verificar que el servicio esté asignado a ella
         if (branchId) {
             const branchAssignment = await this.prisma.branchService.findUnique({
                 where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
@@ -38,7 +39,7 @@ export class SchedulingEngineService {
             if (!branchAssignment || !branchAssignment.active) return [];
         }
 
-        // 2. Get business rules for buffer
+        // Obtener reglas de negocio para el buffer
         const rule = await this.prisma.businessRule.findUnique({
             where: { institution_id: institutionId },
         });
@@ -46,7 +47,7 @@ export class SchedulingEngineService {
         const maxPerSlot = rule?.max_per_slot ?? 1;
         const slotStepMinutes = service.duration + bufferMinutes;
 
-        // 3. Get the schedule for that day of week
+        // Obtener el horario para ese día de la semana
         const [y, mo, d] = date.split('-').map(Number);
         const dayOfWeek = new Date(Date.UTC(y, mo - 1, d)).getUTCDay(); // UTC-safe day-of-week
         const scheduleWhere: any = {
@@ -59,7 +60,7 @@ export class SchedulingEngineService {
 
         let schedule = await this.prisma.schedule.findFirst({ where: scheduleWhere });
 
-        // fallback: if branch has no schedule, try institution-level
+        // fallback: si la sucursal no tiene horario, intentar a nivel de institución
         if (!schedule && branchId) {
             schedule = await this.prisma.schedule.findFirst({
                 where: { institution_id: institutionId, day_of_week: dayOfWeek, active: true, branch_id: null },
@@ -67,7 +68,7 @@ export class SchedulingEngineService {
         }
         if (!schedule) return [];
 
-        // 4. Generate all possible slots from start to end
+        // Generar todos los espacios posibles desde el inicio hasta el fin
         const allSlots: string[] = [];
         const [startH, startM] = schedule.start_time.split(':').map(Number);
         const [endH, endM] = schedule.end_time.split(':').map(Number);
@@ -80,7 +81,7 @@ export class SchedulingEngineService {
             allSlots.push(`${h}:${min}`);
         }
 
-        // 5. Get existing appointments for that date
+        //Obtener citas existentes para esa fecha
         const dayStart = new Date(`${date}T00:00:00.000Z`);
         const dayEnd = new Date(`${date}T23:59:59.999Z`);
         const existingAppointments = await this.prisma.appointment.findMany({
@@ -89,10 +90,11 @@ export class SchedulingEngineService {
                 ...(branchId ? { branch_id: branchId } : {}),
                 status: { in: ['PENDING', 'CONFIRMED'] },
                 date: { gte: dayStart, lte: dayEnd },
+                ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),
             },
         });
 
-        // 6. Filter out blocked times
+        // Filtrar tiempos bloqueados
         let blockedSlots: { start: number; end: number }[] = [];
         if (branchId) {
             const blocked = await this.prisma.blockedTime.findMany({
@@ -104,16 +106,16 @@ export class SchedulingEngineService {
             }));
         }
 
-        // 7. Remove slots that collide with existing appointments or blocked times
+        // 7. Eliminar espacios que colisionan con citas existentes o tiempos bloqueados
         const availableSlots = allSlots.filter((slot) => {
             const slotStart = this.timeToMinutes(slot);
             const slotEnd = slotStart + service.duration;
 
-            // Check blocked times
+            // Revisar tiempos bloqueados
             const isBlocked = blockedSlots.some((b) => slotStart < b.end && slotEnd > b.start);
             if (isBlocked) return false;
 
-            // Count occupancy for this slot
+            // Contar ocupación para este slot
             const occupancy = existingAppointments.filter((appt) => {
                 const apptStart = appt.date.getUTCHours() * 60 + appt.date.getUTCMinutes();
                 const apptEnd = apptStart + service.duration;
@@ -127,21 +129,22 @@ export class SchedulingEngineService {
     }
 
     /**
-     * Validates if a specific datetime is available.
-     * Returns availability status and alternatives if not available.
+     * Valida si un datetime específico está disponible.
+     * Devuelve el estado de disponibilidad y alternativas si no está disponible.
      */
     async validateSlot(params: {
         institutionId: string;
         branchId?: string;
         serviceId: string;
         dateTime: Date; // Full datetime
+        excludeAppointmentId?: string;
     }): Promise<SlotValidationResult> {
-        const { institutionId, branchId, serviceId, dateTime } = params;
+        const { institutionId, branchId, serviceId, dateTime, excludeAppointmentId } = params;
 
-        const date = dateTime.toISOString().split('T')[0]; // UTC date string YYYY-MM-DD
+        const date = dateTime.toISOString().split('T')[0]; // Fecha UTC en formato YYYY-MM-DD
         const requestedTime = `${dateTime.getUTCHours().toString().padStart(2, '0')}:${dateTime.getUTCMinutes().toString().padStart(2, '0')}`;
 
-        const availableSlots = await this.getAvailableSlots({ institutionId, branchId, serviceId, date });
+        const availableSlots = await this.getAvailableSlots({ institutionId, branchId, serviceId, date, excludeAppointmentId });
 
         if (availableSlots.includes(requestedTime)) {
             const rule = await this.prisma.businessRule.findUnique({
@@ -154,7 +157,7 @@ export class SchedulingEngineService {
             };
         }
 
-        // Slot not available — find alternatives (next 3 available in the same day or next 2 days)
+        // Espacio no disponible — encontrar alternativas (próximos 3 disponibles en el mismo día o los siguientes 2 días)
         const alternatives: Date[] = [];
         for (let dayOffset = 0; dayOffset <= 2 && alternatives.length < 3; dayOffset++) {
             const altDate = new Date(dateTime);
@@ -167,7 +170,7 @@ export class SchedulingEngineService {
                 const [h, m] = slot.split(':').map(Number);
                 const altDateTime = new Date(altDate);
                 altDateTime.setHours(h, m, 0, 0);
-                // Skip slots in the past and the originally requested time
+                // Saltar horarios en el pasado y el horario solicitado originalmente
                 if (dayOffset === 0 && this.timeToMinutes(slot) <= this.timeToMinutes(requestedTime)) continue;
                 alternatives.push(altDateTime);
             }
@@ -194,14 +197,14 @@ export class SchedulingEngineService {
             where: { id: serviceId, institution_id: institutionId, active: true },
         });
         trace.service = service ? { id: service.id, name: service.name, duration: service.duration } : null;
-        if (!service) return { ...trace, failAt: 'service not found or inactive' };
+        if (!service) return { ...trace, failAt: 'servicio no encontrado o inactivo' };
 
         if (branchId) {
             const branchAssignment = await this.prisma.branchService.findUnique({
                 where: { branch_id_service_id: { branch_id: branchId, service_id: serviceId } },
             });
             trace.branchServiceAssignment = branchAssignment;
-            if (!branchAssignment || !branchAssignment.active) return { ...trace, failAt: 'service not assigned/active on this branch' };
+            if (!branchAssignment || !branchAssignment.active) return { ...trace, failAt: 'servicio no asignado/activo en esta sucursal' };
         }
 
         const rule = await this.prisma.businessRule.findUnique({ where: { institution_id: institutionId } });
@@ -225,7 +228,7 @@ export class SchedulingEngineService {
             trace.scheduleInstitutionFallback = schedule;
         }
 
-        if (!schedule) return { ...trace, failAt: 'no schedule found for this day of week' };
+        if (!schedule) return { ...trace, failAt: 'no schedule encontrada para este dia de la semana' };
 
         const bufferMinutes = rule?.buffer_minutes ?? 0;
         const slotStepMinutes = service.duration + bufferMinutes;
@@ -239,6 +242,6 @@ export class SchedulingEngineService {
         }
         trace.schedule = { start: schedule.start_time, end: schedule.end_time, generatedSlots: allSlots };
 
-        return { ...trace, failAt: null, result: 'slots generated successfully' };
+        return { ...trace, failAt: null, result: 'slots generados exitosamente' };
     }
 }

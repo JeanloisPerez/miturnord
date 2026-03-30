@@ -66,6 +66,12 @@ export class CustomFieldsService {
 
     async remove(id: string, institutionId: string) {
         await this.findOne(id, institutionId); // Validation
+
+        // Remove any historical responses that would prevent deletion (Foreign key constraint P2003)
+        await this.prisma.appointmentFieldResponse.deleteMany({
+            where: { field_id: id }
+        });
+
         return this.prisma.customField.delete({
             where: { id }
         });

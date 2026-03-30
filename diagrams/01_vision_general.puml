@@ -1,0 +1,61 @@
+@startuml 01 - Vision General
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam roundcorner 12
+skinparam defaultFontName "Helvetica Neue"
+skinparam defaultFontSize 13
+skinparam shadowing false
+
+title <size:18><b>MiTurnoRD — Visión General</b></size>\n<size:12>Arquitectura de alto nivel · SaaS Multi-Tenant</size>
+
+skinparam actor {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+
+skinparam node {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  BorderThickness 2
+}
+
+skinparam database {
+  BackgroundColor #EDE7F6
+  BorderColor #6A1B9A
+  BorderThickness 2
+}
+
+skinparam rectangle {
+  BackgroundColor #FFF8E1
+  BorderColor #F57F17
+  BorderThickness 1.5
+}
+
+actor "Cliente" as Client
+actor "Propietario" as Owner
+actor "Super Admin\n(SaaS)" as Admin
+
+node "Frontend\nCliente & Propietario\n<size:10>React + Vite</size>" as FE #E3F2FD
+node "Frontend Admin\n<size:10>React + Vite</size>" as FEAdmin #FFF3E0
+
+node "Backend API\n<size:10>NestJS · REST · JWT</size>" as BE #E8F5E9
+
+database "PostgreSQL\n<size:10>Prisma ORM</size>" as DB
+
+rectangle "Servicios Externos" as Ext {
+  node "SMTP\n<size:10>nodemailer</size>" as SMTP #FFF8E1
+  node "File Storage\n<size:10>uploads locales</size>" as FS #FFF8E1
+}
+
+Client --> FE : "navega / agenda"
+Owner --> FE : "gestiona negocio"
+Admin --> FEAdmin : "administra plataforma"
+
+FE --> BE : "HTTP REST (JWT)"
+FEAdmin --> BE : "HTTP REST (JWT Admin)"
+
+BE --> DB : "Prisma ORM"
+BE --> SMTP : "emails SMTP/TLS"
+BE --> FS : "archivos subidos"
+
+@enduml

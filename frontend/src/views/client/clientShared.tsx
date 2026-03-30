@@ -25,7 +25,7 @@ export function generateTurnCode(id: string): string {
     return `${l[Math.abs((id.charCodeAt(0) || 65) - 65) % 26]}-${(parseInt(id.replace(/\\D/g, '').slice(0, 4) || '1000', 10) % 9000) + 1000}`;
 }
 export const fmt = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' });
-export const fmtDT = (iso: string) => new Date(iso).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
+export const fmtDT = (iso: string) => new Date(iso).toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short', hour12: false });
 export const todayStr = () => new Date().toISOString().split('T')[0];
 
 // ─── Constants ────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { IsString, IsISO8601, IsArray, IsOptional, ValidateNested } from 'class-validator';
+import { IsString, IsISO8601, IsArray, IsOptional, ValidateNested, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -41,4 +41,30 @@ export class CreateAppointmentDto {
     @ValidateNested({ each: true })
     @Type(() => FieldResponseDto)
     field_responses?: FieldResponseDto[];
+
+    // ── Campos de reserva interna (front-desk / staff) ──────────────────
+    @ApiProperty({ example: false, description: 'true si la cita fue creada por el staff en nombre del cliente', required: false })
+    @IsOptional()
+    @IsBoolean()
+    booked_by_staff?: boolean;
+
+    @ApiProperty({ example: 'Juan Pérez', description: 'Nombre del cliente walk-in (sin cuenta en la plataforma)', required: false })
+    @IsOptional()
+    @IsString()
+    walk_in_name?: string;
+
+    @ApiProperty({ example: '809-555-0000', description: 'Teléfono del cliente walk-in', required: false })
+    @IsOptional()
+    @IsString()
+    walk_in_phone?: string;
+
+    @ApiProperty({ example: 'juan@example.com', description: 'Correo del cliente walk-in', required: false })
+    @IsOptional()
+    @IsString()
+    walk_in_email?: string;
+
+    @ApiProperty({ example: 'uuid-usuario', description: 'ID del usuario a agendar (staff only, opcional para walk-ins)', required: false })
+    @IsOptional()
+    @IsString()
+    user_id?: string;
 }

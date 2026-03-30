@@ -2,7 +2,7 @@
 // SaaS multi-tenant platform for appointment management
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -135,6 +135,7 @@ model Institution {
   email               String?
   institution_type_id String
   status              InstitutionStatus @default(active)
+  is_public           Boolean           @default(false) // true = visible en marketplace público
   created_at          DateTime          @default(now())
   updated_at          DateTime          @updatedAt
 
@@ -326,16 +327,21 @@ model Appointment {
   notes               String?
   institution_id      String
   service_id          String
-  user_id             String
+  user_id             String?           // null para walk-ins sin cuenta en la plataforma
   branch_id           String?
   rescheduled_from_id String?
   reminder_sent       Boolean           @default(false)
+  // Campos de reserva interna (front-desk)
+  booked_by_staff     Boolean           @default(false)
+  walk_in_name        String?
+  walk_in_phone       String?
+  walk_in_email       String?
   created_at          DateTime          @default(now())
   updated_at          DateTime          @updatedAt
 
   institution Institution                @relation(fields: [institution_id], references: [id])
   service     Service                    @relation(fields: [service_id], references: [id])
-  user        User                       @relation(fields: [user_id], references: [id])
+  user        User?                      @relation(fields: [user_id], references: [id])
   branch      Branch?                    @relation(fields: [branch_id], references: [id])
   responses   AppointmentFieldResponse[]
 }

@@ -42,10 +42,10 @@ export default function OwnerDashboard() {
                         <p className="text-sm font-bold text-gray-800 truncate">{inst?.name}</p>
                         <span className={`inline-block mt-1.5 px-2 py-0.5 rounded-full text-xs border ${inst?.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{inst?.status === 'active' ? 'Activa' : 'Inactiva'}</span>
                     </div>
-                    <nav className="flex-1">
+                    <nav className="flex-1 px-3 space-y-1">
                         {NAV.map(({ key, label, Icon }) => (
-                            <button key={key} onClick={() => setView(key)} className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition text-left ${view === key ? 'bg-blue-50 text-blue-700 font-semibold border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                                <Icon size={15} className="shrink-0" />{label}
+                            <button key={key} onClick={() => setView(key)} className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all text-left rounded-xl ${view === key ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/20' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                                <Icon size={18} className="shrink-0" />{label}
                             </button>
                         ))}
                     </nav>

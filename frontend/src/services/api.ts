@@ -27,62 +27,62 @@ api.interceptors.response.use(
 );
 
 // ── Auth ─────────────────────────────────────────────────────────────────
-export const registerUser = (data: object) => api.post('/auth/register', data);
-export const loginUser = (data: object) => api.post('/auth/login', data);
+export const registerUser = (data: object) => api.post('/auth/registerUser', data);
+export const loginUser = (data: object) => api.post('/auth/loginUser', data);
 
 // ── Upload ────────────────────────────────────────────────────────────────
 export const uploadFile = async (file: File): Promise<string> => {
     const fd = new FormData();
     fd.append('file', file);
-    const r = await api.post('/upload', fd);
+    const r = await api.post('/upload/uploadFile', fd);
     return r.data.url as string;
 };
 
 // ── User Profile ──────────────────────────────────────────────────────────
-export const getMe = () => api.get('/users/me');
-export const updateMe = (data: object) => api.patch('/users/me', data);
+export const getMe = () => api.get('/users/userDetails');
+export const updateMe = (data: object) => api.patch('/users/updateUserDetails', data);
 export const changePassword = (data: { current_password: string; new_password: string }) =>
-    api.patch('/users/me/password', data);
+    api.patch('/users/changeUserPassword', data);
 
 // ── Institution Types ─────────────────────────────────────────────────────
-export const getInstitutionTypes = () => api.get('/institution-types');
-export const getInstitutionType = (id: string) => api.get(`/institution-types/${id}`);
+export const getInstitutionTypes = () => api.get('/institution-types/typeList');
+export const getInstitutionType = (id: string) => api.get(`/institution-types/typeDetail/${id}`);
 
 // ── Institutions ──────────────────────────────────────────────────────────
 export const getInstitutions = (search?: string, institutionTypeId?: string) =>
-    api.get('/institutions', { params: { ...(search ? { search } : {}), ...(institutionTypeId ? { institutionTypeId } : {}) } });
-export const getInstitution = (id: string) => api.get(`/institutions/${id}`);
-export const updateInstitution = (id: string, data: object) => api.patch(`/institutions/${id}`, data);
+    api.get('/institutions/institutionList', { params: { ...(search ? { search } : {}), ...(institutionTypeId ? { institutionTypeId } : {}) } });
+export const getInstitution = (id: string) => api.get(`/institutions/institutionDetail/${id}`);
+export const updateInstitution = (id: string, data: object) => api.patch(`/institutions/updateInstitution/${id}`, data);
 
 // ── Branches (Sucursales) ─────────────────────────────────────────────────
 export const getBranches = (institutionId: string) =>
-    api.get(`/branches/institution/${institutionId}`);
-export const getBranch = (id: string) => api.get(`/branches/${id}`);
-export const createBranch = (data: object) => api.post('/branches', data);
-export const updateBranch = (id: string, data: object) => api.patch(`/branches/${id}`, data);
-export const deleteBranch = (id: string) => api.delete(`/branches/${id}`);
+    api.get(`/branches/branchListByInstitution/${institutionId}`);
+export const getBranch = (id: string) => api.get(`/branches/branchDetail/${id}`);
+export const createBranch = (data: object) => api.post('/branches/createBranch', data);
+export const updateBranch = (id: string, data: object) => api.patch(`/branches/updateBranch/${id}`, data);
+export const deleteBranch = (id: string) => api.delete(`/branches/deleteBranch/${id}`);
 
 // ── Services ────────────────────────────────────────────────────────────
 export const getServicesByInstitution = (institutionId: string) =>
-    api.get(`/services/institution/${institutionId}`);
+    api.get(`/services/serviceListByInstitution/${institutionId}`);
 export const getServicesByBranch = (branchId: string) =>
-    api.get(`/services/branch/${branchId}`);
+    api.get(`/services/serviceListByBranch/${branchId}`);
 export const getServiceBranchAssignments = (serviceId: string) =>
-    api.get(`/services/${serviceId}/branches`);
+    api.get(`/services/branchAssignments/${serviceId}`);
 export const assignServiceToBranch = (serviceId: string, branchId: string) =>
-    api.post(`/services/${serviceId}/branches/${branchId}`);
+    api.post(`/services/assignToBranch/${serviceId}/${branchId}`);
 export const removeServiceFromBranch = (serviceId: string, branchId: string) =>
-    api.delete(`/services/${serviceId}/branches/${branchId}`);
-export const createService = (data: object) => api.post('/services', data);
-export const updateService = (id: string, data: object) => api.patch(`/services/${id}`, data);
-export const deleteService = (id: string) => api.delete(`/services/${id}`);
+    api.delete(`/services/removeFromBranch/${serviceId}/${branchId}`);
+export const createService = (data: object) => api.post('/services/createService', data);
+export const updateService = (id: string, data: object) => api.patch(`/services/updateService/${id}`, data);
+export const deleteService = (id: string) => api.delete(`/services/deleteService/${id}`);
 
 // ── Schedules ──────────────────────────────────────────────────────────
 export const getSchedulesByInstitution = (institutionId: string) =>
-    api.get(`/schedules/institution/${institutionId}`);
-export const createSchedule = (data: object) => api.post('/schedules', data);
-export const updateSchedule = (id: string, data: object) => api.patch(`/schedules/${id}`, data);
-export const deleteSchedule = (id: string) => api.delete(`/schedules/${id}`);
+    api.get(`/schedules/scheduleListByInstitution/${institutionId}`);
+export const createSchedule = (data: object) => api.post('/schedules/createSchedule', data);
+export const updateSchedule = (id: string, data: object) => api.patch(`/schedules/updateSchedule/${id}`, data);
+export const deleteSchedule = (id: string) => api.delete(`/schedules/deleteSchedule/${id}`);
 
 // ── Scheduling Engine ──────────────────────────────────────────────────
 export const getAvailableSlots = (params: {
@@ -90,41 +90,46 @@ export const getAvailableSlots = (params: {
     serviceId: string;
     date: string;
     branchId?: string;
-}) => api.get('/scheduling-engine/slots', { params });
+}) => api.get('/scheduling-engine/getAvailableSlots', { params });
 
 // ── Appointments ────────────────────────────────────────────────────────
-export const getAppointments = () => api.get('/appointments');
+export const getAppointments = () => api.get('/appointments/appointmentList');
 export const getAppointmentsByInstitution = (institutionId: string, filters?: object) =>
-    api.get(`/appointments/institution/${institutionId}`, { params: filters });
+    api.get(`/appointments/appointmentListByInstitution/${institutionId}`, { params: filters });
 export const getInstitutionClients = (institutionId: string) =>
-    api.get(`/appointments/clients/${institutionId}`);
-export const getAppointment = (id: string) => api.get(`/appointments/${id}`);
-export const createAppointment = (data: object) => api.post('/appointments', data);
-export const updateAppointment = (id: string, data: object) => api.patch(`/appointments/${id}`, data);
-export const cancelAppointment = (id: string) => api.patch(`/appointments/${id}/cancel`);
-export const deleteAppointment = (id: string) => api.delete(`/appointments/${id}`);
+    api.get(`/appointments/institutionClients/${institutionId}`);
+export const getAppointment = (id: string) => api.get(`/appointments/appointmentDetail/${id}`);
+export const createAppointment = (data: object) => api.post('/appointments/createAppointment', data);
+export const createStaffAppointment = (data: object) => api.post('/appointments/staff', data);
+export const updateAppointment = (id: string, data: object) => api.patch(`/appointments/updateAppointment/${id}`, data);
+export const cancelAppointment = (id: string) => api.patch(`/appointments/cancelAppointment/${id}`);
+export const deleteAppointment = (id: string) => api.delete(`/appointments/deleteAppointment/${id}`);
+
+// ── Users ───────────────────────────────────────────────────────────────
+export const searchUsers = (query: string) => api.get('/users/search', { params: { q: query } });
+
 
 // ── Business Rules ─────────────────────────────────────────────────────
 export const getBusinessRules = (institutionId: string) =>
-    api.get(`/business-rules/${institutionId}`);
+    api.get(`/business-rules/businessRuleDetail/${institutionId}`);
 export const updateBusinessRules = (institutionId: string, data: object) =>
-    api.put(`/business-rules/${institutionId}`, data);
+    api.put(`/business-rules/updateBusinessRule/${institutionId}`, data);
 
 // ── Blocked Times ──────────────────────────────────────────────────────
 export const getBlockedTimes = (branchId: string) =>
-    api.get(`/blocked-times/${branchId}`);
-export const createBlockedTime = (data: object) => api.post('/blocked-times', data);
-export const deleteBlockedTime = (id: string) => api.delete(`/blocked-times/${id}`);
+    api.get(`/blocked-times/blockedTimeList`, { params: { branchId } });
+export const createBlockedTime = (data: object) => api.post('/blocked-times/createBlockedTime', data);
+export const deleteBlockedTime = (id: string) => api.delete(`/blocked-times/deleteBlockedTime/${id}`);
 
 // ── Custom Fields ────────────────────────────────────────────────────────
 export const getCustomFields = (institutionId: string, serviceId?: string) =>
-    api.get(`/custom-fields/institution/${institutionId}`, { params: { serviceId } });
-export const createCustomField = (data: object) => api.post('/custom-fields', data);
-export const updateCustomField = (id: string, data: object) => api.patch(`/custom-fields/${id}`, data);
-export const deleteCustomField = (id: string) => api.delete(`/custom-fields/${id}`);
+    api.get(`/custom-fields/customFieldListByInstitution/${institutionId}`, { params: { serviceId } });
+export const createCustomField = (data: object) => api.post('/custom-fields/createCustomField', data);
+export const updateCustomField = (id: string, data: object) => api.patch(`/custom-fields/updateCustomField/${id}`, data);
+export const deleteCustomField = (id: string) => api.delete(`/custom-fields/deleteCustomField/${id}`);
 
 // ── Reports ────────────────────────────────────────────────────────────
 export const getReports = (institutionId: string, range?: string, params?: { startDate?: string; endDate?: string; serviceId?: string; branchId?: string; }) =>
-    api.get(`/reports/institution/${institutionId}`, { params: { range, ...params } });
+    api.get(`/reports/institutionSummary/${institutionId}`, { params: { range, ...params } });
 
 export default api;

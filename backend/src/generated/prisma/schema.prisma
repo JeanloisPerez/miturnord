@@ -1,0 +1,369 @@
+// MiTurnoRD — Prisma Schema (Advanced Architecture)
+// SaaS multi-tenant platform for appointment management
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(uuid())
+  full_name     String
+  email         String?    @unique
+  phone         String?    @unique
+  document_id   String?
+  password_hash String
+  status        UserStatus @default(active)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  roles                   UserRole[]
+  sessions                AuthSession[]
+  institution_memberships InstitutionUser[]
+  appointments            Appointment[]
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  users UserRole[]
+}
+
+model UserRole {
+  user_id String
+  role_id Int
+
+  user User @relation(fields: [user_id], references: [id])
+  role Role @relation(fields: [role_id], references: [id])
+
+  @@id([user_id, role_id])
+}
+
+model AuthSession {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum UserStatus {
+  active
+  blocked
+  deleted
+}
+
+// ─────────────────────────────────────────────
+// SAAS ADMIN
+// ─────────────────────────────────────────────
+
+model SaasAdmin {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  full_name     String?
+  password_hash String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// INSTITUTION TYPES & DYNAMIC FIELDS
+// ─────────────────────────────────────────────
+
+model InstitutionType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  icon        String? // emoji or icon key for UI
+  created_at  DateTime @default(now())
+
+  institutions Institution[]
+}
+
+model CustomField {
+  id          String    @id @default(uuid())
+  label       String
+  placeholder String?
+  field_type  FieldType
+  required    Boolean   @default(false)
+  options     String? // JSON string for SELECT type options
+  order       Int       @default(0)
+
+  // Relations: Field belongs to an Institution.
+  // Optionally, it applies only to a specific Service.
+  institution_id String
+  service_id     String?
+
+  institution Institution                @relation(fields: [institution_id], references: [id], onDelete: Cascade)
+  service     Service?                   @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  responses   AppointmentFieldResponse[]
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  EMAIL
+  PHONE
+  FILE
+}
+
+// ─────────────────────────────────────────────
+// INSTITUTION
+// ─────────────────────────────────────────────
+
+model Institution {
+  id                  String            @id @default(uuid())
+  name                String
+  slug                String            @unique
+  description         String?
+  logo_url            String? // URL imagen/logo de la institución
+  address             String?
+  phone               String?
+  email               String?
+  institution_type_id String
+  status              InstitutionStatus @default(active)
+  is_public           Boolean           @default(false) // true = visible en marketplace público
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+
+  institution_type InstitutionType   @relation(fields: [institution_type_id], references: [id])
+  users            InstitutionUser[]
+  services         Service[]
+  schedules        Schedule[]
+  appointments     Appointment[]
+  branches         Branch[]
+  business_rule    BusinessRule?
+  custom_fields    CustomField[]
+}
+
+enum InstitutionStatus {
+  active
+  inactive
+  suspended
+}
+
+model InstitutionUser {
+  id             String          @id @default(uuid())
+  institution_id String
+  user_id        String
+  role           InstitutionRole
+  created_at     DateTime        @default(now())
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+  user        User        @relation(fields: [user_id], references: [id])
+
+  @@unique([institution_id, user_id])
+}
+
+enum InstitutionRole {
+  OWNER
+  STAFF
+  MANAGER
+}
+
+// ─────────────────────────────────────────────
+// BRANCHES (Sucursales)
+// ─────────────────────────────────────────────
+
+model Branch {
+  id             String   @id @default(uuid())
+  institution_id String
+  name           String
+  address        String?
+  city           String?
+  phone          String?
+  latitude       Float?
+  longitude      Float?
+  is_main        Boolean  @default(false)
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  institution   Institution     @relation(fields: [institution_id], references: [id])
+  schedules     Schedule[]
+  appointments  Appointment[]
+  blocked_times BlockedTime[]
+  services      BranchService[]
+}
+
+// ─────────────────────────────────────────────
+// BRANCH ↔ SERVICE (M:N — not all services exist in all branches)
+// ─────────────────────────────────────────────
+
+model BranchService {
+  branch_id  String
+  service_id String
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  branch  Branch  @relation(fields: [branch_id], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@id([branch_id, service_id])
+}
+
+// ─────────────────────────────────────────────
+// SERVICES
+// ─────────────────────────────────────────────
+
+model Service {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  image_url      String? // URL imagen del servicio
+  duration       Int // minutes
+  price          Decimal? @db.Decimal(10, 2)
+  institution_id String
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  institution   Institution     @relation(fields: [institution_id], references: [id])
+  appointments  Appointment[]
+  custom_fields CustomField[]
+  branches      BranchService[]
+}
+
+// ─────────────────────────────────────────────
+// SCHEDULES (Weekly availability)
+// ─────────────────────────────────────────────
+
+model Schedule {
+  id             String   @id @default(uuid())
+  day_of_week    Int // 0=Sunday, 1=Monday, ... 6=Saturday
+  start_time     String // "08:00"
+  end_time       String // "17:00"
+  institution_id String
+  branch_id      String?
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+  branch      Branch?     @relation(fields: [branch_id], references: [id])
+
+  @@unique([institution_id, branch_id, day_of_week])
+}
+
+// ─────────────────────────────────────────────
+// BLOCKED TIMES (Manual slot blocks)
+// ─────────────────────────────────────────────
+
+model BlockedTime {
+  id         String   @id @default(uuid())
+  branch_id  String
+  date       DateTime @db.Date
+  start_time String // "HH:MM"
+  end_time   String // "HH:MM"
+  reason     String?
+  created_at DateTime @default(now())
+
+  branch Branch @relation(fields: [branch_id], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// BUSINESS RULES (Automation config)
+// ─────────────────────────────────────────────
+
+model BusinessRule {
+  id                   String   @id @default(uuid())
+  institution_id       String   @unique
+  auto_confirm         Boolean  @default(true)
+  buffer_minutes       Int      @default(0)
+  max_per_slot         Int      @default(1)
+  no_show_minutes      Int      @default(30)
+  advance_book_days    Int      @default(30)
+  reminder_days_before Int      @default(1)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  institution Institution @relation(fields: [institution_id], references: [id])
+}
+
+// ─────────────────────────────────────────────
+// SYSTEM SETTINGS (SAAS Admin Config)
+// ─────────────────────────────────────────────
+
+model SystemSetting {
+  id                              String   @id @default("singleton")
+  cron_reminder_frequency_minutes Int      @default(60)
+  log_retention_days              Int      @default(7)
+  updated_at                      DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// REMINDER LOGS
+// ─────────────────────────────────────────────
+
+model ReminderLog {
+  id             String   @id @default(uuid())
+  appointment_id String
+  user_email     String
+  status         String // e.g. "SUCCESS", "FAILED"
+  error_details  String?
+  created_at     DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────
+// APPOINTMENTS
+// ─────────────────────────────────────────────
+
+model Appointment {
+  id                  String            @id @default(uuid())
+  date                DateTime
+  status              AppointmentStatus @default(PENDING)
+  notes               String?
+  institution_id      String
+  service_id          String
+  user_id             String? // null para walk-ins sin cuenta en la plataforma
+  branch_id           String?
+  rescheduled_from_id String?
+  reminder_sent       Boolean           @default(false)
+  // Campos de reserva interna (front-desk)
+  booked_by_staff     Boolean           @default(false)
+  walk_in_name        String?
+  walk_in_phone       String?
+  walk_in_email       String?
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+
+  institution Institution                @relation(fields: [institution_id], references: [id])
+  service     Service                    @relation(fields: [service_id], references: [id])
+  user        User?                      @relation(fields: [user_id], references: [id])
+  branch      Branch?                    @relation(fields: [branch_id], references: [id])
+  responses   AppointmentFieldResponse[]
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// Dynamic field responses for each appointment
+model AppointmentFieldResponse {
+  id             String @id @default(uuid())
+  appointment_id String
+  field_id       String
+  value          String
+
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  field       CustomField @relation(fields: [field_id], references: [id])
+
+  @@unique([appointment_id, field_id])
+}

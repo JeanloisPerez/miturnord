@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Globe, Save, Loader2, CheckCircle2, XCircle, Settings } from 'lucide-react';
+import { Globe, Save, Loader2, CheckCircle2, XCircle, Settings, Store, Clock } from 'lucide-react';
 import { getBusinessRules, updateBusinessRules, getInstitution, updateInstitution } from '../../services/api';
 import { Hdr, btn, ic, Spinner, ImageUploader } from './ownerShared';
 
 export default function OwnerSettingsView({ instId }: { instId: string }) {
+    const [activeTab, setActiveTab] = useState<'profile' | 'rules'>('profile');
+    
     const [rules, setRules] = useState<any>({ auto_confirm: true, buffer_minutes: 0, max_per_slot: 1, no_show_minutes: 30, advance_book_days: 30 });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState('');
-    const [profile, setProfile] = useState({ description: '', phone: '', email: '', logo_url: '' });
+    
+    const [profile, setProfile] = useState({ description: '', phone: '', email: '', logo_url: '', is_public: false });
     const [profileMsg, setProfileMsg] = useState('');
     const [profileSaving, setProfileSaving] = useState(false);
 
@@ -16,7 +19,13 @@ export default function OwnerSettingsView({ instId }: { instId: string }) {
         getBusinessRules(instId).then(r => setRules(r.data)).finally(() => setLoading(false));
         getInstitution(instId).then(r => {
             const d = r.data;
-            setProfile({ description: d.description || '', phone: d.phone || '', email: d.email || '', logo_url: d.logo_url || '' });
+            setProfile({ 
+                description: d.description || '', 
+                phone: d.phone || '', 
+                email: d.email || '', 
+                logo_url: d.logo_url || '',
+                is_public: d.is_public ?? false 
+            });
         });
     }, [instId]);
 
@@ -32,7 +41,13 @@ export default function OwnerSettingsView({ instId }: { instId: string }) {
     const handleProfileSave = async (e: React.FormEvent) => {
         e.preventDefault(); setProfileSaving(true); setProfileMsg('');
         try {
-            await updateInstitution(instId, { description: profile.description || undefined, phone: profile.phone || undefined, email: profile.email || undefined, logo_url: profile.logo_url || undefined });
+            await updateInstitution(instId, { 
+                description: profile.description || undefined, 
+                phone: profile.phone || undefined, 
+                email: profile.email || undefined, 
+                logo_url: profile.logo_url || undefined,
+                is_public: profile.is_public
+            });
             setProfileMsg('ok');
         } catch { setProfileMsg('error'); }
         finally { setProfileSaving(false); setTimeout(() => setProfileMsg(''), 4000); }
@@ -41,84 +56,142 @@ export default function OwnerSettingsView({ instId }: { instId: string }) {
     if (loading) return <Spinner />;
 
     const fields = [
-        { key: 'buffer_minutes', label: 'Buffer entre citas', unit: 'min', desc: 'Tiempo de descanso entre citas.', min: 0, max: 120 },
-        { key: 'max_per_slot', label: 'Citas simultáneas máx.', unit: 'citas', desc: 'Cuántas citas al mismo tiempo.', min: 1, max: 50 },
-        { key: 'no_show_minutes', label: 'Espera para NO_SHOW', unit: 'min', desc: 'Minutos antes de marcar como no presentado.', min: 5, max: 120 },
-        { key: 'advance_book_days', label: 'Días de anticipación', unit: 'días', desc: 'Con cuántos días se puede agendar.', min: 1, max: 365 }
+        { key: 'buffer_minutes', label: 'Buffer entre citas', unit: 'min', desc: 'Tiempo inactivo o de descanso requerido entre cada cita agendada.', min: 0, max: 120 },
+        { key: 'max_per_slot', label: 'Citas simultáneas', unit: 'citas', desc: 'Capacidad máxima de clientes que pueden agendar a la misma hora exacta.', min: 1, max: 50 },
+        { key: 'no_show_minutes', label: 'Tolerancia de espera', unit: 'min', desc: 'Minutos de gracia antes de marcar automáticamente la cita como NO PRESENTADO.', min: 5, max: 120 },
+        { key: 'advance_book_days', label: 'Ventana de reserva', unit: 'días', desc: 'Días máximos de anticipación con los que un cliente puede agendar en el futuro.', min: 1, max: 365 }
     ];
 
     return (
-        <div className="space-y-6 max-w-2xl">
-            <Hdr title="Configuración" sub="Perfil de empresa y reglas del motor de citas" />
+        <div className="space-y-6 max-w-4xl pb-10">
+            <Hdr title="Configuración" sub="Administra el perfil de tu institución y los parámetros de agendamiento" />
 
-            {/* Institution Profile Card */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Globe size={15} className="text-blue-600" />
-                    <p className="text-gray-800 font-semibold text-sm">Perfil de la Empresa</p>
-                </div>
-                <form onSubmit={handleProfileSave} className="p-6 space-y-5">
-                    <ImageUploader
-                        label="Logo / Imagen de portada"
-                        value={profile.logo_url}
-                        onChange={url => setProfile(p => ({ ...p, logo_url: url }))}
-                    />
-                    <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
-                        <textarea
-                            value={profile.description}
-                            onChange={e => setProfile(p => ({ ...p, description: e.target.value }))}
-                            rows={3} placeholder="Describe tu institución..."
-                            className={`${ic} resize-none`} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div><label className="block text-xs font-medium text-gray-600 mb-1">Teléfono</label><input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="809-000-0000" className={ic} /></div>
-                        <div><label className="block text-xs font-medium text-gray-600 mb-1">Email</label><input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} placeholder="contacto@empresa.com" className={ic} /></div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button type="submit" disabled={profileSaving} className={`${btn} flex items-center gap-2`}>
-                            {profileSaving ? <><Loader2 size={14} className="animate-spin" />Guardando...</> : <><Save size={14} />Guardar perfil</>}
-                        </button>
-                        {profileMsg === 'ok' && <p className="text-green-600 text-sm flex items-center gap-1.5"><CheckCircle2 size={13} />Guardado.</p>}
-                        {profileMsg === 'error' && <p className="text-red-500 text-sm flex items-center gap-1.5"><XCircle size={13} />Error al guardar.</p>}
-                    </div>
-                </form>
+            {/* Navigation Pills */}
+            <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-xl flex-wrap">
+                <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'profile' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                >
+                    <Globe size={16} /> Perfil Público
+                </button>
+                <button
+                    onClick={() => setActiveTab('rules')}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'rules' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+                >
+                    <Settings size={16} /> Reglas de Reserva
+                </button>
             </div>
 
-            {/* Business Rules Card */}
-            <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                    <Settings size={15} className="text-blue-600" />
-                    <p className="text-gray-800 font-semibold text-sm">Reglas del Motor de Citas</p>
-                </div>
-                <div className="flex items-start justify-between gap-4 p-6">
-                    <div>
-                        <p className="text-gray-800 font-semibold text-sm">Confirmación automática</p>
-                        <p className="text-gray-500 text-xs mt-0.5">Las citas se confirman al instante sin intervención manual.</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input type="checkbox" checked={rules.auto_confirm} onChange={e => setRules((r: any) => ({ ...r, auto_confirm: e.target.checked }))} className="sr-only peer" />
-                        <div className="w-10 h-5 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all" />
-                    </label>
-                </div>
-                {fields.map(({ key, label, unit, desc, min, max }) => (
-                    <div key={key} className="p-6">
-                        <p className="text-gray-800 font-semibold text-sm">{label}</p>
-                        <p className="text-gray-500 text-xs mt-0.5 mb-3">{desc}</p>
-                        <div className="flex items-center gap-3">
-                            <input type="number" min={min} max={max} value={rules[key]} onChange={e => setRules((r: any) => ({ ...r, [key]: Number(e.target.value) }))} className={`${ic} w-28`} />
-                            <span className="text-gray-500 text-sm">{unit}</span>
+            {/* Content Area */}
+            {activeTab === 'profile' && (
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600"><Store size={18} /></div>
+                        <div>
+                            <p className="text-gray-900 font-bold">Perfil de la Empresa</p>
+                            <p className="text-gray-500 text-xs mt-0.5">Información visible para los clientes en el portal público</p>
                         </div>
                     </div>
-                ))}
-                <div className="p-6 flex items-center gap-4">
-                    <button type="submit" disabled={saving} className={`${btn} flex items-center gap-2`}>
-                        {saving ? <><Loader2 size={14} className="animate-spin" />Guardando...</> : <>Guardar Configuración</>}
-                    </button>
-                    {msg === 'ok' && <p className="text-green-600 text-sm flex items-center gap-1.5"><CheckCircle2 size={13} />Guardado correctamente.</p>}
-                    {msg === 'error' && <p className="text-red-500 text-sm flex items-center gap-1.5"><XCircle size={13} />Error al guardar.</p>}
+                    
+                    <form onSubmit={handleProfileSave} className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div className="flex flex-col gap-5">
+                                <ImageUploader
+                                    label="Logo de la institución"
+                                    value={profile.logo_url}
+                                    onChange={url => setProfile(p => ({ ...p, logo_url: url }))}
+                                />
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Descripción pública</label>
+                                    <textarea
+                                        value={profile.description}
+                                        onChange={e => setProfile(p => ({ ...p, description: e.target.value }))}
+                                        rows={4} placeholder="Describe los servicios y especialidades de tu institución..."
+                                        className={`${ic} resize-none bg-gray-50 focus:bg-white`} />
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-col gap-5">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Teléfono de contacto</label>
+                                    <input value={profile.phone} onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="Ej: 809-000-0000" className={`${ic} bg-gray-50 focus:bg-white`} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Correo electrónico</label>
+                                    <input type="email" value={profile.email} onChange={e => setProfile(p => ({ ...p, email: e.target.value }))} placeholder="contacto@institucion.com" className={`${ic} bg-gray-50 focus:bg-white`} />
+                                </div>
+                                
+                                {/* Marketplace Toggle */}
+                                <div className="mt-2 flex items-start justify-between gap-4 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                                    <div>
+                                        <p className="text-blue-900 font-bold text-sm">Visible en el Marketplace</p>
+                                        <p className="text-blue-700/80 text-xs mt-1 leading-relaxed">Si está activo, tu negocio será indexado en el buscador público de MiTurnoRD para atraer clientes nuevos.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                        <input type="checkbox" checked={profile.is_public} onChange={e => setProfile(p => ({ ...p, is_public: e.target.checked }))} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 border border-gray-200 peer-checked:border-transparent" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 pt-6 border-t border-gray-100">
+                            <button type="submit" disabled={profileSaving} className={`${btn} flex items-center justify-center gap-2 min-w-[160px]`}>
+                                {profileSaving ? <><Loader2 size={16} className="animate-spin" />Guardando...</> : <><Save size={16} />Guardar Cambios</>}
+                            </button>
+                            {profileMsg === 'ok' && <p className="text-green-600 font-medium text-sm flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-lg"><CheckCircle2 size={16} />Perfil actualizado con éxito</p>}
+                            {profileMsg === 'error' && <p className="text-red-500 font-medium text-sm flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-lg"><XCircle size={16} />Error al guardar cambios</p>}
+                        </div>
+                    </form>
                 </div>
-            </form>
+            )}
+
+            {activeTab === 'rules' && (
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600"><Clock size={18} /></div>
+                        <div>
+                            <p className="text-gray-900 font-bold">Reglas Operativas</p>
+                            <p className="text-gray-500 text-xs mt-0.5">Define cómo se comporta el motor al recibir y procesar citas</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleSave} className="p-6">
+                        {/* Auto Confirm Toggle */}
+                        <div className="flex items-start justify-between gap-4 p-5 bg-gray-50 rounded-xl border border-gray-100 mb-8">
+                            <div>
+                                <p className="text-gray-900 font-bold text-sm">Confirmación Automática de Citas</p>
+                                <p className="text-gray-500 text-xs mt-1 leading-relaxed max-w-lg">Si está activo, las citas agendadas por los clientes pasarán al estado CONFIRMADA instantáneamente sin requerir validación manual tuya.</p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" checked={rules.auto_confirm} onChange={e => setRules((r: any) => ({ ...r, auto_confirm: e.target.checked }))} className="sr-only peer" />
+                                <div className="w-11 h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 border border-gray-200 peer-checked:border-transparent" />
+                            </label>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                            {fields.map(({ key, label, unit, desc, min, max }) => (
+                                <div key={key}>
+                                    <label className="block text-sm font-bold text-gray-800 mb-1">{label}</label>
+                                    <p className="text-gray-500 text-xs mb-3 h-8 leading-relaxed pr-4">{desc}</p>
+                                    <div className="relative w-max">
+                                        <input type="number" min={min} max={max} value={rules[key]} onChange={e => setRules((r: any) => ({ ...r, [key]: Number(e.target.value) }))} className={`${ic} w-32 pl-4 pr-12 font-semibold text-gray-900 bg-gray-50 focus:bg-white transition-colors`} />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold uppercase">{unit}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-4 pt-6 border-t border-gray-100">
+                            <button type="submit" disabled={saving} className={`${btn} flex items-center justify-center gap-2 min-w-[160px]`}>
+                                {saving ? <><Loader2 size={16} className="animate-spin" />Guardando...</> : <><Save size={16} />Guardar Reglas</>}
+                            </button>
+                            {msg === 'ok' && <p className="text-green-600 font-medium text-sm flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-lg"><CheckCircle2 size={16} />Reglas actualizadas con éxito</p>}
+                            {msg === 'error' && <p className="text-red-500 font-medium text-sm flex items-center gap-1.5 bg-red-50 px-3 py-1.5 rounded-lg"><XCircle size={16} />Error al actualizar Reglas</p>}
+                        </div>
+                    </form>
+                </div>
+            )}
         </div>
     );
 }

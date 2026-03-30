@@ -187,38 +187,53 @@ export default function OwnerServicesView({ instId }: { instId: string }) {
                 </div>
             )}
             {loading ? <Spinner /> : svcs.length === 0 ? <Empty msg="Sin servicios aún" /> : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {svcs.map(s => (
-                        <div key={s.id} className={`bg-white border rounded-xl overflow-hidden transition-all ${s.is_active !== false ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
-                            {s.image_url && (
-                                <div className="h-32 w-full overflow-hidden">
-                                    <img src={s.image_url} alt={s.name} className="w-full h-full object-cover" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {svcs.map((s) => (
+                        <div key={s.id} className={`bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all ${s.is_active !== false ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
+                            {s.image_url ? (
+                                <div className="h-40 w-full overflow-hidden relative group">
+                                    <img src={s.image_url} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    {s.is_active !== false && <span className="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm">Activo</span>}
+                                </div>
+                            ) : (
+                                <div className="h-32 w-full bg-blue-50 flex flex-col items-center justify-center relative">
+                                    <Wrench size={32} className="text-blue-200 mb-2" />
+                                    <p className="text-xs text-blue-400 font-medium tracking-wide">Sin imagen</p>
+                                    {s.is_active !== false && <span className="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm">Activo</span>}
                                 </div>
                             )}
                             <div className="p-5">
-                                <div className="flex items-start justify-between gap-2 mb-3">
-                                    {!s.image_url && <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center shrink-0"><Wrench size={16} className="text-blue-600" /></div>}
-                                    <div className="flex items-center gap-2 ml-auto">
-                                        {s.id === topId && svcs.length > 1 && <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 text-xs rounded border border-amber-200 font-medium">Popular</span>}
-                                        <button onClick={() => toggleActive(s.id, !(s.is_active !== false))} className="text-gray-400 hover:text-blue-500 transition">{s.is_active !== false ? <ToggleRight size={20} className="text-blue-500" /> : <ToggleLeft size={20} />}</button>
+                                <div className="flex items-start justify-between gap-2 mb-1">
+                                    <p className="text-gray-900 font-bold text-lg leading-tight truncate" title={s.name}>{s.name}</p>
+                                    <button onClick={() => toggleActive(s.id, !(s.is_active !== false))} className="text-gray-400 hover:text-blue-500 transition shrink-0 mt-0.5" title={s.is_active !== false ? 'Desactivar' : 'Activar'}>{s.is_active !== false ? <ToggleRight size={20} className="text-blue-500" /> : <ToggleLeft size={20} />}</button>
+                                </div>
+                                {s.description && <p className="text-gray-500 text-xs mt-1.5 line-clamp-2 leading-relaxed h-8">{s.description}</p>}
+                                
+                                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Duración</span>
+                                        <span className="flex items-center gap-1 text-sm font-semibold text-gray-800"><Clock size={14} className="text-gray-400"/>{s.duration} min</span>
+                                    </div>
+                                    <div className="flex flex-col ml-4">
+                                        <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Precio</span>
+                                        <span className="text-sm font-semibold text-blue-600">{s.price ? `RD$${Number(s.price).toFixed(0)}` : 'Gratis'}</span>
                                     </div>
                                 </div>
-                                <p className="text-gray-900 font-bold text-base">{s.name}</p>
-                                {s.description && <p className="text-gray-500 text-xs mt-1 line-clamp-2">{s.description}</p>}
-                                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
-                                    <span className="flex items-center gap-1 text-xs text-gray-500"><Clock size={11} />{s.duration} min</span>
-                                    {s.price && <span className="text-blue-700 text-sm font-bold">RD${Number(s.price).toFixed(0)}</span>}
-                                    <div className="ml-auto flex items-center gap-2">
-                                        {/* Branch assignment button */}
-                                        <button
-                                            onClick={() => setAssignModal(s)}
-                                            title="Asignar sucursales"
-                                            className="text-gray-400 hover:text-indigo-600 transition"
-                                        >
-                                            <Building2 size={14} />
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Reservas</p>
+                                         <p className="text-gray-800 font-semibold text-xs">-- este mes</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setAssignModal(s)} title="Asignar a sucursales" className="bg-white text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition p-1.5 rounded-lg border border-gray-200">
+                                            <Building2 size={15} />
                                         </button>
-                                        <button onClick={() => handleEdit(s)} className="text-gray-400 hover:text-blue-600 transition"><Edit2 size={14} /></button>
-                                        <button onClick={() => handleDel(s.id)} className="text-red-400 hover:text-red-600 transition"><Trash2 size={14} /></button>
+                                        <button onClick={() => handleEdit(s)} title="Editar servicio" className="bg-white text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition p-1.5 rounded-lg border border-gray-200">
+                                            <Edit2 size={15} />
+                                        </button>
+                                        <button onClick={() => handleDel(s.id)} title="Eliminar servicio" className="bg-white text-gray-500 hover:text-red-600 hover:bg-red-50 transition p-1.5 rounded-lg border border-gray-200">
+                                            <Trash2 size={15} />
+                                        </button>
                                     </div>
                                 </div>
                             </div>

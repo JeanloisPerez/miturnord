@@ -81,12 +81,17 @@ export class RemindersService implements OnApplicationBootstrap {
         let success = false;
         let errorMsg = '';
 
+        let recipientEmail = '';
+
         try {
-          if (appt.user.email) {
-            const formattedDate = appt.date.toLocaleString('es-DO', { dateStyle: 'full', timeStyle: 'short' });
+          recipientEmail = appt.user?.email ?? appt.walk_in_email ?? '';
+          const recipientName = appt.user?.full_name ?? appt.walk_in_name ?? 'Cliente';
+
+          if (recipientEmail) {
+            const formattedDate = appt.date.toLocaleString('es-DO', { dateStyle: 'full', timeStyle: 'short', hour12: false });
             success = await this.emailsService.sendAppointmentConfirmation(
-              appt.user.email,
-              appt.user.full_name,
+              recipientEmail,
+              recipientName,
               formattedDate,
               appt.service.name + ' (RECORDATORIO)', // Modify slightly or create a new email template in EmailService
               appt.institution.name
@@ -108,7 +113,7 @@ export class RemindersService implements OnApplicationBootstrap {
         await this.prisma.reminderLog.create({
           data: {
             appointment_id: appt.id,
-            user_email: appt.user.email ?? 'No email',
+            user_email: recipientEmail || 'No email',
             status: success ? 'SUCCESS' : 'FAILED',
             error_details: success ? null : errorMsg,
           }

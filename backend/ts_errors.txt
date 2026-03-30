@@ -1,0 +1,5 @@
+src/appointments/appointments.service.ts(263,19): error TS18047: 'appt.user' is possibly 'null'.
+src/reminders/reminders.service.ts(85,15): error TS18047: 'appt.user' is possibly 'null'.
+src/reminders/reminders.service.ts(88,15): error TS18047: 'appt.user' is possibly 'null'.
+src/reminders/reminders.service.ts(89,15): error TS18047: 'appt.user' is possibly 'null'.
+src/reminders/reminders.service.ts(111,25): error TS18047: 'appt.user' is possibly 'null'.

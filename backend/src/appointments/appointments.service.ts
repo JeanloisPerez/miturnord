@@ -24,19 +24,24 @@ export class AppointmentsService {
   ) { }
 
   async create(dto: CreateAppointmentDto, userId: string) {
+    // Determina el userId final: staff puede pasar un user_id explícito o crear un walk-in
+    const isWalkIn = dto.booked_by_staff && !dto.user_id && !!dto.walk_in_name;
+    const effectiveUserId = dto.booked_by_staff
+      ? (dto.user_id ?? null)   // staff puede pasar user_id o dejarlo null (walk-in)
+      : userId;                  // cliente normal siempre usa su propio id
 
     const service = await this.prisma.service.findFirst({
       where: { id: dto.service_id, institution_id: dto.institution_id, active: true },
     });
     if (!service) throw new BadRequestException('El servicio no pertenece a esta institución o no está activo');
 
-    // 2. Validate institution exists
+    // 2. valida que la institution existe
     const institution = await this.prisma.institution.findUnique({
       where: { id: dto.institution_id },
     });
     if (!institution) throw new NotFoundException('Institución no encontrada');
 
-    // 3. Validate required custom fields for this institution (and service if applicable)
+    // 3. Valida que los campos requeridos para esta institución (y servicio si aplica) estén presentes
     const institutionFields = await this.prisma.customField.findMany({
       where: {
         institution_id: dto.institution_id,
@@ -52,7 +57,7 @@ export class AppointmentsService {
       );
     }
 
-    // 4. Run scheduling engine validation
+    // 4. Ejecuta la validación del motor de programación
     const appointmentDate = new Date(dto.date);
     const validation = await this.schedulingEngine.validateSlot({
       institutionId: dto.institution_id,
@@ -68,17 +73,21 @@ export class AppointmentsService {
       });
     }
 
-    // 5. Create appointment (auto-confirm based on business rules)
+    // 5. Crea la cita en una transacción
     const result = await this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
           institution_id: dto.institution_id,
           service_id: dto.service_id,
-          user_id: userId,
+          user_id: effectiveUserId,
           branch_id: dto.branch_id || null,
           date: appointmentDate,
           notes: dto.notes,
-          status: validation.status as any, // CONFIRMED or PENDING
+          status: validation.status as any,
+          booked_by_staff: dto.booked_by_staff ?? false,
+          walk_in_name: dto.walk_in_name ?? null,
+          walk_in_phone: dto.walk_in_phone ?? null,
+          walk_in_email: dto.walk_in_email ?? null,
         },
       });
 
@@ -95,18 +104,20 @@ export class AppointmentsService {
       return tx.appointment.findUnique({ where: { id: appointment.id }, include: APPOINTMENT_INCLUDE });
     });
 
-    if (result && result.status === 'CONFIRMED' && result.user?.email) {
-      const formattedDate = result.date.toLocaleString('es-DO', {
-        dateStyle: 'full', timeStyle: 'short'
-      });
-      // Fire and forget email
-      this.emailsService.sendAppointmentConfirmation(
-        result.user.email,
-        result.user.full_name,
-        formattedDate,
-        result.service.name,
-        result.institution.name
-      ).catch(e => console.error('Fallo al enviar correo desde AppointmentsService:', e));
+    if (result && result.status === 'CONFIRMED') {
+      const recipientEmail = result.user?.email ?? dto.walk_in_email;
+      const recipientName = result.user?.full_name ?? dto.walk_in_name ?? 'Cliente';
+
+      if (recipientEmail) {
+        const formattedDate = result.date.toLocaleString('es-DO', { dateStyle: 'full', timeStyle: 'short', hour12: false });
+        this.emailsService.sendAppointmentConfirmation(
+          recipientEmail,
+          recipientName,
+          formattedDate,
+          result.service.name,
+          result.institution.name
+        ).catch(e => console.error('Fallo al enviar correo desde AppointmentsService:', e));
+      }
     }
 
     return result;
@@ -163,21 +174,71 @@ export class AppointmentsService {
   }
 
   async update(id: string, dto: UpdateAppointmentDto, userId: string, role: string, institutionId?: string) {
-    await this.findOne(id, userId, role, institutionId);
-    return this.prisma.appointment.update({
+    const appointment = await this.findOne(id, userId, role, institutionId);
+
+    let newStatus = dto.status;
+    let newDate = appointment.date;
+
+    // Si se está cambiando la fecha 
+    if (dto.date) {
+      newDate = new Date(dto.date);
+      const validation = await this.schedulingEngine.validateSlot({
+        institutionId: appointment.institution_id,
+        branchId: appointment.branch_id || undefined,
+        serviceId: appointment.service_id,
+        dateTime: newDate,
+        excludeAppointmentId: id
+      });
+
+      if (!validation.available) {
+        throw new ConflictException({
+          message: validation.message || 'El nuevo horario no está disponible',
+          alternatives: (validation.alternatives || []).map((d) => d.toISOString()),
+        });
+      }
+      newStatus = validation.status; // CONFIRMED o PENDING según reglas de negocio
+    }
+
+    const updated = await this.prisma.appointment.update({
       where: { id },
       data: {
-        ...(dto.status !== undefined && { status: dto.status as any }),
+        ...(dto.date !== undefined && { date: newDate }),
+        ...(newStatus !== undefined && { status: newStatus as any }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
       include: APPOINTMENT_INCLUDE,
     });
+
+    // Si se reagendó y quedó confirmada, enviar nuevo correo
+    if (dto.date && updated.status === 'CONFIRMED' && updated.user?.email) {
+      const formattedDate = updated.date.toLocaleString('es-DO', {
+        dateStyle: 'full', timeStyle: 'short', hour12: false
+      });
+      // Notificar por correo el cambio de horario
+      this.emailsService.sendAppointmentConfirmation(
+        updated.user.email,
+        updated.user.full_name,
+        `NUEVO HORARIO: ${formattedDate}`,
+        updated.service.name,
+        updated.institution.name
+      ).catch(e => console.error('Error al enviar correo de reagendamiento:', e));
+    }
+
+    return updated;
   }
 
-  async cancel(id: string, userId: string) {
+  async cancel(id: string, userId: string, role?: string, institutionId?: string) {
     const appointment = await this.prisma.appointment.findUnique({ where: { id } });
     if (!appointment) throw new NotFoundException(`Cita ${id} no encontrada`);
-    if (appointment.user_id !== userId) throw new ForbiddenException('Solo puedes cancelar tus propias citas');
+    
+    // Auth checks
+    if (role === 'CLIENT' && appointment.user_id !== userId) {
+        throw new ForbiddenException('Solo puedes cancelar tus propias citas');
+    }
+    if (role === 'INSTITUTION_OWNER' && appointment.institution_id !== institutionId) {
+        throw new ForbiddenException('No tienes acceso a esta cita');
+    }
+
     if (!['PENDING', 'CONFIRMED'].includes(appointment.status))
       throw new BadRequestException('Solo se pueden cancelar citas pendientes o confirmadas');
 
@@ -208,6 +269,7 @@ export class AppointmentsService {
     // Group by user
     const clientMap: Record<string, any> = {};
     appointments.forEach((appt) => {
+      if (!appt.user) return;
       const uid = appt.user.id;
       if (!clientMap[uid]) {
         clientMap[uid] = { ...appt.user, appointments: [] };
