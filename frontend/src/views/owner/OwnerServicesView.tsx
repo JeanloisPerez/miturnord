@@ -153,7 +153,6 @@ export default function OwnerServicesView({ instId }: { instId: string }) {
 
     const toggleActive = async (id: string, is_active: boolean) => { await updateService(id, { is_active }); setSvcs(s => s.map(x => x.id === id ? { ...x, is_active } : x)); };
     const handleDel = async (id: string) => { if (!confirm('¿Eliminar?')) return; await deleteService(id); setSvcs(s => s.filter(x => x.id !== id)); };
-    const topId = svcs.reduce((top, s, _, arr) => arr.find(x => x.id === top)?.appointmentCount > s.appointmentCount ? top : s.id, svcs[0]?.id);
 
     return (
         <div className="space-y-5 max-w-5xl">

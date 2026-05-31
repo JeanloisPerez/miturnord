@@ -13,6 +13,7 @@ const APPOINTMENT_INCLUDE = {
   branch: { select: { id: true, name: true, address: true, city: true } },
   user: { select: { id: true, full_name: true, email: true, phone: true } },
   responses: { include: { field: { select: { label: true, field_type: true } } } },
+  review: true,
 };
 
 @Injectable()
@@ -27,8 +28,8 @@ export class AppointmentsService {
     // Determina el userId final: staff puede pasar un user_id explícito o crear un walk-in
     const isWalkIn = dto.booked_by_staff && !dto.user_id && !!dto.walk_in_name;
     const effectiveUserId = dto.booked_by_staff
-      ? (dto.user_id ?? null)   // staff puede pasar user_id o dejarlo null (walk-in)
-      : userId;                  // cliente normal siempre usa su propio id
+      ? (dto.user_id ?? null)
+      : userId;
 
     const service = await this.prisma.service.findFirst({
       where: { id: dto.service_id, institution_id: dto.institution_id, active: true },
@@ -57,7 +58,7 @@ export class AppointmentsService {
       );
     }
 
-    // 4. Ejecuta la validación del motor de programación
+    // Ejecuta la validación del motor de programación
     const appointmentDate = new Date(dto.date);
     const validation = await this.schedulingEngine.validateSlot({
       institutionId: dto.institution_id,
@@ -224,19 +225,34 @@ export class AppointmentsService {
       ).catch(e => console.error('Error al enviar correo de reagendamiento:', e));
     }
 
+    // Si la cita fue completada, enviar invitación a reseñar
+    if (dto.status === 'COMPLETED' && updated.status === 'COMPLETED') {
+      const recipientEmail = updated.user?.email || updated.walk_in_email;
+      const recipientName = updated.user?.full_name || updated.walk_in_name || 'Cliente';
+
+      if (recipientEmail) {
+        this.emailsService.sendReviewInvitation(
+          recipientEmail,
+          recipientName,
+          updated.service.name,
+          updated.institution.name
+        ).catch(e => console.error('Error al enviar correo de invitación a reseña:', e));
+      }
+    }
+
     return updated;
   }
 
   async cancel(id: string, userId: string, role?: string, institutionId?: string) {
     const appointment = await this.prisma.appointment.findUnique({ where: { id } });
     if (!appointment) throw new NotFoundException(`Cita ${id} no encontrada`);
-    
+
     // Auth checks
     if (role === 'CLIENT' && appointment.user_id !== userId) {
-        throw new ForbiddenException('Solo puedes cancelar tus propias citas');
+      throw new ForbiddenException('Solo puedes cancelar tus propias citas');
     }
     if (role === 'INSTITUTION_OWNER' && appointment.institution_id !== institutionId) {
-        throw new ForbiddenException('No tienes acceso a esta cita');
+      throw new ForbiddenException('No tienes acceso a esta cita');
     }
 
     if (!['PENDING', 'CONFIRMED'].includes(appointment.status))
@@ -289,5 +305,42 @@ export class AppointmentsService {
     const appt = await this.prisma.appointment.findUnique({ where: { id } });
     if (!appt) throw new NotFoundException(`Cita ${id} no encontrada`);
     return this.prisma.appointment.delete({ where: { id } });
+  }
+
+  async createReview(appointmentId: string, rating: number, comment: string | undefined, userId: string) {
+    if (rating < 1 || rating > 5) {
+      throw new BadRequestException('La valoración debe estar entre 1 y 5 estrellas');
+    }
+
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { review: true }
+    });
+
+    if (!appointment) {
+      throw new NotFoundException(`Cita ${appointmentId} no encontrada`);
+    }
+
+    if (appointment.user_id !== userId) {
+      throw new ForbiddenException('Solo puedes valorar tus propias citas');
+    }
+
+    if (appointment.status !== 'COMPLETED') {
+      throw new BadRequestException('Solo se pueden valorar citas completadas');
+    }
+
+    if (appointment.review) {
+      throw new ConflictException('Esta cita ya ha sido valorada');
+    }
+
+    return this.prisma.review.create({
+      data: {
+        rating,
+        comment: comment || null,
+        appointment_id: appointmentId,
+        institution_id: appointment.institution_id,
+        user_id: userId,
+      }
+    });
   }
 }

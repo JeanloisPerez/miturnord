@@ -102,6 +102,9 @@ export const getAppointment = (id: string) => api.get(`/appointments/appointment
 export const createAppointment = (data: object) => api.post('/appointments/createAppointment', data);
 export const createStaffAppointment = (data: object) => api.post('/appointments/staff', data);
 export const updateAppointment = (id: string, data: object) => api.patch(`/appointments/updateAppointment/${id}`, data);
+export const rescheduleAppointment = (id: string, data: { date: string }) => api.patch(`/appointments/reschedule/${id}`, data);
+export const createReview = (appointmentId: string, rating: number, comment?: string) =>
+    api.post(`/appointments/${appointmentId}/review`, { rating, comment });
 export const cancelAppointment = (id: string) => api.patch(`/appointments/cancelAppointment/${id}`);
 export const deleteAppointment = (id: string) => api.delete(`/appointments/deleteAppointment/${id}`);
 

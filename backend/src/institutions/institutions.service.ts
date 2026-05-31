@@ -8,7 +8,8 @@ const INSTITUTION_INCLUDE = {
   institution_type: true,
   services: { where: { active: true }, orderBy: { name: 'asc' as const } },
   schedules: { where: { active: true }, orderBy: { day_of_week: 'asc' as const } },
-  custom_fields: { orderBy: { order: 'asc' as const } }
+  custom_fields: { orderBy: { order: 'asc' as const } },
+  reviews: { include: { user: { select: { full_name: true } } }, orderBy: { created_at: 'desc' as const } }
 };
 
 @Injectable()
@@ -40,12 +41,32 @@ export class InstitutionsService {
     });
   }
 
-  findAll(search?: string, institutionTypeId?: string) {
+  async findAll(search?: string, institutionTypeId?: string) {
+    let matchingInstitutionIds: string[] = [];
+
+    if (search) {
+      // First, find all institutions that have a service matching the search
+      const matchingServices = await this.prisma.service.findMany({
+        where: {
+          name: { contains: search, mode: 'insensitive' as const },
+          active: true
+        },
+        select: { institution_id: true }
+      });
+      matchingInstitutionIds = matchingServices.map(s => s.institution_id);
+    }
+
     return this.prisma.institution.findMany({
       where: {
         status: 'active',
         is_public: true,          // Solo instituciones que eligieron ser públicas
-        ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+        ...(search ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+            ...(matchingInstitutionIds.length > 0 ? [{ id: { in: matchingInstitutionIds } }] : [])
+          ]
+        } : {}),
         ...(institutionTypeId ? { institution_type_id: institutionTypeId } : {}),
       },
       include: {

@@ -314,6 +314,16 @@ exports.Prisma.AppointmentFieldResponseScalarFieldEnum = {
   value: 'value'
 };
 
+exports.Prisma.ReviewScalarFieldEnum = {
+  id: 'id',
+  rating: 'rating',
+  comment: 'comment',
+  appointment_id: 'appointment_id',
+  institution_id: 'institution_id',
+  user_id: 'user_id',
+  created_at: 'created_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -384,7 +394,8 @@ exports.Prisma.ModelName = {
   SystemSetting: 'SystemSetting',
   ReminderLog: 'ReminderLog',
   Appointment: 'Appointment',
-  AppointmentFieldResponse: 'AppointmentFieldResponse'
+  AppointmentFieldResponse: 'AppointmentFieldResponse',
+  Review: 'Review'
 };
 
 /**

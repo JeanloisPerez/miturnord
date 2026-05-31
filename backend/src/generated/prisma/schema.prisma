@@ -1,5 +1,4 @@
-// MiTurnoRD — Prisma Schema (Advanced Architecture)
-// SaaS multi-tenant platform for appointment management
+// MiTurnoRD — Prisma Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -29,6 +28,7 @@ model User {
   sessions                AuthSession[]
   institution_memberships InstitutionUser[]
   appointments            Appointment[]
+  reviews                 Review[]
 }
 
 model Role {
@@ -147,6 +147,7 @@ model Institution {
   branches         Branch[]
   business_rule    BusinessRule?
   custom_fields    CustomField[]
+  reviews          Review[]
 }
 
 enum InstitutionStatus {
@@ -344,6 +345,7 @@ model Appointment {
   user        User?                      @relation(fields: [user_id], references: [id])
   branch      Branch?                    @relation(fields: [branch_id], references: [id])
   responses   AppointmentFieldResponse[]
+  review      Review?
 }
 
 enum AppointmentStatus {
@@ -355,7 +357,6 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
-// Dynamic field responses for each appointment
 model AppointmentFieldResponse {
   id             String @id @default(uuid())
   appointment_id String
@@ -366,4 +367,18 @@ model AppointmentFieldResponse {
   field       CustomField @relation(fields: [field_id], references: [id])
 
   @@unique([appointment_id, field_id])
+}
+
+model Review {
+  id             String   @id @default(uuid())
+  rating         Int // Valoración del 1 al 5
+  comment        String? // Comentario u opinión opcional
+  appointment_id String   @unique // Una cita puede tener como máximo una reseña
+  institution_id String
+  user_id        String
+  created_at     DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institution_id], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }

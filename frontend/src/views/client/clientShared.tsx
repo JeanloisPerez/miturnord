@@ -1,7 +1,7 @@
 import { Zap, Target, Layers, Heart, Landmark, ShieldCheck, Scissors, Briefcase, Building2 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type View = 'home' | 'institution' | 'appointments' | 'profile';
+export type View = 'home' | 'institution' | 'appointments' | 'profile' | 'search';
 export type BookStep = 0 | 1 | 2 | 3 | 4;
 
 export interface InstitutionType { id: string; name: string; icon?: string; }
@@ -52,12 +52,12 @@ export const BANNERS = [
 export const inputCls = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white";
 
 /** Returns a Lucide icon matching the institution type name */
-export function TypeIcon({ name = '', size = 18, className = '' }: { name?: string; size?: number; className?: string }) {
+export function TypeIcon({ name = '', size = 18, className = '', strokeWidth }: { name?: string; size?: number; className?: string; strokeWidth?: number }) {
     const n = name.toLowerCase();
-    if (n.includes('salud') || n.includes('clinic') || n.includes('medic')) return <Heart size={size} className={className} />;
-    if (n.includes('banco') || n.includes('financ')) return <Landmark size={size} className={className} />;
-    if (n.includes('gobierno') || n.includes('public')) return <ShieldCheck size={size} className={className} />;
-    if (n.includes('barber') || n.includes('belleza') || n.includes('spa')) return <Scissors size={size} className={className} />;
-    if (n.includes('servicio') || n.includes('profesional')) return <Briefcase size={size} className={className} />;
-    return <Building2 size={size} className={className} />;
+    if (n.includes('salud') || n.includes('clinic') || n.includes('medic')) return <Heart size={size} className={className} strokeWidth={strokeWidth} />;
+    if (n.includes('banco') || n.includes('financ')) return <Landmark size={size} className={className} strokeWidth={strokeWidth} />;
+    if (n.includes('gobierno') || n.includes('public')) return <ShieldCheck size={size} className={className} strokeWidth={strokeWidth} />;
+    if (n.includes('barber') || n.includes('belleza') || n.includes('spa')) return <Scissors size={size} className={className} strokeWidth={strokeWidth} />;
+    if (n.includes('servicio') || n.includes('profesional')) return <Briefcase size={size} className={className} strokeWidth={strokeWidth} />;
+    return <Building2 size={size} className={className} strokeWidth={strokeWidth} />;
 }

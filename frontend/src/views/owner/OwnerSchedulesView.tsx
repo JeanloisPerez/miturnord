@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Clock, Plus, Trash2, Save, Loader2, CheckCircle2 } from 'lucide-react';
+import { Clock, Plus, Trash2, Loader2 } from 'lucide-react';
 import { getSchedulesByInstitution, createSchedule, updateSchedule, deleteSchedule } from '../../services/api';
-import { Hdr, DAYS, ic, btn, Spinner } from './ownerShared';
+import { Hdr, DAYS, Spinner } from './ownerShared';
 
 export default function OwnerSchedulesView({ instId }: { instId: string }) {
     const [scheds, setScheds] = useState<any[]>([]);
@@ -114,7 +114,7 @@ export default function OwnerSchedulesView({ instId }: { instId: string }) {
                                         <div className="flex-1 space-y-3">
                                             {isActive ? (
                                                 <>
-                                                    {dayBlocks.map((block, idx) => (
+                                                    {dayBlocks.map((block) => (
                                                         <div key={block.id} className="flex items-center gap-3">
                                                             <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                                                                 <input 

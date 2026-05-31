@@ -132,4 +132,16 @@ export class AppointmentsController {
   remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
   }
+
+  @Post(':id/review')
+  @Roles('CLIENT')
+  @ApiOperation({ summary: 'Agregar valoración y reseña a una cita completada' })
+  @ApiResponse({ status: 201, description: 'Reseña agregada exitosamente.' })
+  createReview(
+    @Param('id') id: string,
+    @Body() dto: { rating: number; comment?: string },
+    @Request() req,
+  ) {
+    return this.appointmentsService.createReview(id, dto.rating, dto.comment, req.user.sub);
+  }
 }

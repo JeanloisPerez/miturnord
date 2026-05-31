@@ -1,15 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Search, Menu, Home, Calendar, User, X, LogOut } from 'lucide-react';
+import { Search, Menu, Home, Calendar, User, X, LogOut, Star } from 'lucide-react';
 
-import { getInstitutions, getInstitutionTypes, getAppointments } from '../services/api';
+import { getInstitutions, getInstitutionTypes, getAppointments, createReview } from '../services/api';
 import type { View, InstitutionType, Institution } from '../views/client/clientShared';
 
 import ClientHomeView from '../views/client/ClientHomeView';
 import ClientInstitutionDetailView from '../views/client/ClientInstitutionDetailView';
 import ClientApptsView from '../views/client/ClientApptsView';
 import ClientProfileView from '../views/client/ClientProfileView';
+import ClientSearchView from '../views/client/ClientSearchView';
 
 export default function ClientDashboard() {
     const { logout } = useAuth();
@@ -19,22 +20,81 @@ export default function ClientDashboard() {
     const [view, setView] = useState<View>('home');
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // Global Browse state (kept here so search bar in header works)
+    // Home view browse state
     const [iTypes, setITypes] = useState<InstitutionType[]>([]);
     const [activeType, setActiveType] = useState<string | null>(null);
-    const [search, setSearch] = useState('');
     const [institutions, setInstitutions] = useState<Institution[]>([]);
     const [browseLoading, setBrowseLoading] = useState(false);
+
+    // Search state
+    const [searchInput, setSearchInput] = useState('');
+    const [submittedSearch, setSubmittedSearch] = useState('');
 
     // Selected institution id for DetailView
     const [selectedInstId, setSelectedInstId] = useState<string | null>(null);
 
-    // Appointments state (kept here to pass to ApptsView and sidebar badge if we wanted)
+    // Appointments state
     const [myAppts, setMyAppts] = useState<any[]>([]);
     const [apptLoading, setApptLoading] = useState(false);
 
+    // Reviews states
+    const [reviewPromptAppt, setReviewPromptAppt] = useState<any | null>(null);
+    const [promptRating, setPromptRating] = useState<number>(0);
+    const [promptHoverRating, setPromptHoverRating] = useState<number>(0);
+    const [promptComment, setPromptComment] = useState<string>('');
+    const [submittingPromptReview, setSubmittingPromptReview] = useState<boolean>(false);
+    const [promptError, setPromptError] = useState<string>('');
+
     // ── Load data ─────────────────────────────────────────────────────────────
-    useEffect(() => { loadTypes(); loadInstitutions(); }, []);
+    
+    // Load types and appointments on mount
+    useEffect(() => { 
+        loadTypes(); 
+        loadMyAppts();
+    }, []);
+
+    // Effect to check for unreviewed completed appointments and prompt the user
+    useEffect(() => {
+        if (!myAppts || myAppts.length === 0) return;
+        const unreviewed = myAppts.find(a => a.status === 'COMPLETED' && !a.review);
+        if (unreviewed) {
+            const dismissedKey = `dismissed_review_${unreviewed.id}`;
+            if (!localStorage.getItem(dismissedKey)) {
+                setReviewPromptAppt(unreviewed);
+                setPromptRating(0);
+                setPromptComment('');
+                setPromptError('');
+            }
+        }
+    }, [myAppts]);
+
+    const handlePromptReviewSubmit = async () => {
+        if (!reviewPromptAppt || promptRating === 0) return;
+        setSubmittingPromptReview(true);
+        setPromptError('');
+        try {
+            await createReview(reviewPromptAppt.id, promptRating, promptComment);
+            await loadMyAppts(); // Reload to update state
+            setReviewPromptAppt(null);
+        } catch (err: any) {
+            setPromptError(err.response?.data?.message || 'Error al enviar valoración.');
+        } finally {
+            setSubmittingPromptReview(false);
+        }
+    };
+
+    const handlePromptReviewDismiss = () => {
+        if (reviewPromptAppt) {
+            localStorage.setItem(`dismissed_review_${reviewPromptAppt.id}`, 'true');
+            setReviewPromptAppt(null);
+        }
+    };
+    
+    // Reload institutions for home view whenever activeType changes (no search query applied here)
+    useEffect(() => {
+        loadInstitutions(undefined, activeType);
+    }, [activeType]);
+
     useEffect(() => { if (view === 'appointments') loadMyAppts(); }, [view]);
 
     const loadTypes = async () => {
@@ -58,6 +118,15 @@ export default function ClientDashboard() {
     const openInstitution = (inst: Institution) => {
         setSelectedInstId(inst.id);
         setView('institution');
+    };
+
+    const handleSearchSubmit = () => {
+        if (!searchInput.trim()) {
+            setView('home');
+            return;
+        }
+        setSubmittedSearch(searchInput);
+        setView('search');
     };
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -130,15 +199,22 @@ export default function ClientDashboard() {
                     <span className="lg:hidden font-black text-lg text-black tracking-tight">
                         MiTurno<span className="text-blue-600">RD</span>
                     </span>
-                    {/* Search (full width) */}
+                    {/* Header Search Bar */}
                     <div className="flex-1 relative max-w-2xl mx-auto">
                         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); loadInstitutions(e.target.value, activeType); if (view !== 'home') setView('home'); }}
-                            placeholder="Buscar instituciones o servicios..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-full text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                            value={searchInput}
+                            onChange={e => setSearchInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit(); }}
+                            placeholder="Buscar en el catálogo (Ej: Odontólogo, Dr. Carlos...)"
+                            className="w-full pl-10 pr-24 py-2 bg-gray-100 rounded-full text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
                         />
+                        <button 
+                            onClick={handleSearchSubmit}
+                            className="absolute right-1 top-1 bottom-1 px-4 bg-blue-600 text-white text-xs font-bold rounded-full hover:bg-blue-700 transition"
+                        >
+                            Buscar
+                        </button>
                     </div>
                 </div>
             </header>
@@ -159,13 +235,19 @@ export default function ClientDashboard() {
 
                     {view === 'home' && (
                         <ClientHomeView
-                            search={search}
                             institutions={institutions}
                             browseLoading={browseLoading}
                             iTypes={iTypes}
                             activeType={activeType}
                             setActiveType={setActiveType}
                             loadInstitutions={loadInstitutions}
+                            onOpenInstitution={openInstitution}
+                        />
+                    )}
+
+                    {view === 'search' && (
+                        <ClientSearchView 
+                            searchQuery={submittedSearch}
                             onOpenInstitution={openInstitution}
                         />
                     )}
@@ -193,6 +275,92 @@ export default function ClientDashboard() {
 
                 </main>
             </div>
+
+            {/* Modal de valoración emergente (pop-up) */}
+            {reviewPromptAppt && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 relative border border-gray-100">
+                        {/* Cerrar */}
+                        <button onClick={handlePromptReviewDismiss} className="absolute right-5 top-5 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                            <X size={16} className="text-gray-500" />
+                        </button>
+
+                        <div className="text-center space-y-6">
+                            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 shadow-inner">
+                                <Star size={32} className="fill-blue-100" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-black text-gray-900 tracking-tight">¿Cómo fue tu experiencia?</h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    Tu cita de <span className="font-bold text-gray-900">{reviewPromptAppt.service?.name}</span> en <span className="font-bold text-gray-900">{reviewPromptAppt.institution?.name}</span> ha finalizado. ¡Queremos saber qué tal te fue!
+                                </p>
+                            </div>
+
+                            {/* Stars interaction */}
+                            <div className="flex justify-center gap-2 py-2">
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                    const active = (promptHoverRating || promptRating) >= star;
+                                    return (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setPromptRating(star)}
+                                            onMouseEnter={() => setPromptHoverRating(star)}
+                                            onMouseLeave={() => setPromptHoverRating(0)}
+                                            className="focus:outline-none transition-transform hover:scale-125 duration-100 active:scale-95"
+                                        >
+                                            <Star
+                                                size={36}
+                                                className={`transition-colors duration-200 ${
+                                                    active 
+                                                        ? 'fill-amber-400 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.4)]' 
+                                                        : 'text-gray-200 fill-transparent hover:text-amber-300'
+                                                }`}
+                                                strokeWidth={1.5}
+                                            />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Comment */}
+                            <div className="text-left space-y-2">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Escribe tu reseña <span className="text-gray-400 font-medium">(opcional)</span></label>
+                                <textarea
+                                    value={promptComment}
+                                    onChange={(e) => setPromptComment(e.target.value)}
+                                    rows={3}
+                                    placeholder="Comparte tu opinión sobre la atención, puntualidad o instalaciones..."
+                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black focus:border-transparent transition-all resize-none"
+                                />
+                            </div>
+
+                            {promptError && (
+                                <p className="text-xs font-bold text-red-500 bg-red-50 border border-red-100 p-3 rounded-xl">{promptError}</p>
+                            )}
+
+                            {/* Buttons */}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={handlePromptReviewDismiss}
+                                    className="flex-1 py-4 border-2 border-gray-100 hover:bg-gray-50 text-gray-700 font-bold text-sm rounded-[20px] transition-colors"
+                                >
+                                    Omitir
+                                </button>
+                                <button
+                                    onClick={handlePromptReviewSubmit}
+                                    disabled={promptRating === 0 || submittingPromptReview}
+                                    className="flex-[2] py-4 bg-black hover:bg-gray-800 disabled:opacity-40 disabled:hover:bg-black text-white font-black text-sm rounded-[20px] transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+                                >
+                                    {submittingPromptReview ? 'Enviando...' : 'Enviar valoración'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
