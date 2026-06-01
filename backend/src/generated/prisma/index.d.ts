@@ -3070,6 +3070,9 @@ export namespace Prisma {
     status: $Enums.UserStatus | null
     created_at: Date | null
     updated_at: Date | null
+    google_access_token: string | null
+    google_refresh_token: string | null
+    google_calendar_id: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -3082,6 +3085,9 @@ export namespace Prisma {
     status: $Enums.UserStatus | null
     created_at: Date | null
     updated_at: Date | null
+    google_access_token: string | null
+    google_refresh_token: string | null
+    google_calendar_id: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -3094,6 +3100,9 @@ export namespace Prisma {
     status: number
     created_at: number
     updated_at: number
+    google_access_token: number
+    google_refresh_token: number
+    google_calendar_id: number
     _all: number
   }
 
@@ -3108,6 +3117,9 @@ export namespace Prisma {
     status?: true
     created_at?: true
     updated_at?: true
+    google_access_token?: true
+    google_refresh_token?: true
+    google_calendar_id?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -3120,6 +3132,9 @@ export namespace Prisma {
     status?: true
     created_at?: true
     updated_at?: true
+    google_access_token?: true
+    google_refresh_token?: true
+    google_calendar_id?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -3132,6 +3147,9 @@ export namespace Prisma {
     status?: true
     created_at?: true
     updated_at?: true
+    google_access_token?: true
+    google_refresh_token?: true
+    google_calendar_id?: true
     _all?: true
   }
 
@@ -3217,6 +3235,9 @@ export namespace Prisma {
     status: $Enums.UserStatus
     created_at: Date
     updated_at: Date
+    google_access_token: string | null
+    google_refresh_token: string | null
+    google_calendar_id: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -3246,6 +3267,9 @@ export namespace Prisma {
     status?: boolean
     created_at?: boolean
     updated_at?: boolean
+    google_access_token?: boolean
+    google_refresh_token?: boolean
+    google_calendar_id?: boolean
     roles?: boolean | User$rolesArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     institution_memberships?: boolean | User$institution_membershipsArgs<ExtArgs>
@@ -3264,6 +3288,9 @@ export namespace Prisma {
     status?: boolean
     created_at?: boolean
     updated_at?: boolean
+    google_access_token?: boolean
+    google_refresh_token?: boolean
+    google_calendar_id?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3276,6 +3303,9 @@ export namespace Prisma {
     status?: boolean
     created_at?: boolean
     updated_at?: boolean
+    google_access_token?: boolean
+    google_refresh_token?: boolean
+    google_calendar_id?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -3288,9 +3318,12 @@ export namespace Prisma {
     status?: boolean
     created_at?: boolean
     updated_at?: boolean
+    google_access_token?: boolean
+    google_refresh_token?: boolean
+    google_calendar_id?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "full_name" | "email" | "phone" | "document_id" | "password_hash" | "status" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "full_name" | "email" | "phone" | "document_id" | "password_hash" | "status" | "created_at" | "updated_at" | "google_access_token" | "google_refresh_token" | "google_calendar_id", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     roles?: boolean | User$rolesArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -3321,6 +3354,9 @@ export namespace Prisma {
       status: $Enums.UserStatus
       created_at: Date
       updated_at: Date
+      google_access_token: string | null
+      google_refresh_token: string | null
+      google_calendar_id: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -3758,6 +3794,9 @@ export namespace Prisma {
     readonly status: FieldRef<"User", 'UserStatus'>
     readonly created_at: FieldRef<"User", 'DateTime'>
     readonly updated_at: FieldRef<"User", 'DateTime'>
+    readonly google_access_token: FieldRef<"User", 'String'>
+    readonly google_refresh_token: FieldRef<"User", 'String'>
+    readonly google_calendar_id: FieldRef<"User", 'String'>
   }
     
 
@@ -22265,6 +22304,7 @@ export namespace Prisma {
     walk_in_name: string | null
     walk_in_phone: string | null
     walk_in_email: string | null
+    google_event_id: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -22284,6 +22324,7 @@ export namespace Prisma {
     walk_in_name: string | null
     walk_in_phone: string | null
     walk_in_email: string | null
+    google_event_id: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -22303,6 +22344,7 @@ export namespace Prisma {
     walk_in_name: number
     walk_in_phone: number
     walk_in_email: number
+    google_event_id: number
     created_at: number
     updated_at: number
     _all: number
@@ -22324,6 +22366,7 @@ export namespace Prisma {
     walk_in_name?: true
     walk_in_phone?: true
     walk_in_email?: true
+    google_event_id?: true
     created_at?: true
     updated_at?: true
   }
@@ -22343,6 +22386,7 @@ export namespace Prisma {
     walk_in_name?: true
     walk_in_phone?: true
     walk_in_email?: true
+    google_event_id?: true
     created_at?: true
     updated_at?: true
   }
@@ -22362,6 +22406,7 @@ export namespace Prisma {
     walk_in_name?: true
     walk_in_phone?: true
     walk_in_email?: true
+    google_event_id?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -22454,6 +22499,7 @@ export namespace Prisma {
     walk_in_name: string | null
     walk_in_phone: string | null
     walk_in_email: string | null
+    google_event_id: string | null
     created_at: Date
     updated_at: Date
     _count: AppointmentCountAggregateOutputType | null
@@ -22490,6 +22536,7 @@ export namespace Prisma {
     walk_in_name?: boolean
     walk_in_phone?: boolean
     walk_in_email?: boolean
+    google_event_id?: boolean
     created_at?: boolean
     updated_at?: boolean
     institution?: boolean | InstitutionDefaultArgs<ExtArgs>
@@ -22516,6 +22563,7 @@ export namespace Prisma {
     walk_in_name?: boolean
     walk_in_phone?: boolean
     walk_in_email?: boolean
+    google_event_id?: boolean
     created_at?: boolean
     updated_at?: boolean
     institution?: boolean | InstitutionDefaultArgs<ExtArgs>
@@ -22539,6 +22587,7 @@ export namespace Prisma {
     walk_in_name?: boolean
     walk_in_phone?: boolean
     walk_in_email?: boolean
+    google_event_id?: boolean
     created_at?: boolean
     updated_at?: boolean
     institution?: boolean | InstitutionDefaultArgs<ExtArgs>
@@ -22562,11 +22611,12 @@ export namespace Prisma {
     walk_in_name?: boolean
     walk_in_phone?: boolean
     walk_in_email?: boolean
+    google_event_id?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "status" | "notes" | "institution_id" | "service_id" | "user_id" | "branch_id" | "rescheduled_from_id" | "reminder_sent" | "booked_by_staff" | "walk_in_name" | "walk_in_phone" | "walk_in_email" | "created_at" | "updated_at", ExtArgs["result"]["appointment"]>
+  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "date" | "status" | "notes" | "institution_id" | "service_id" | "user_id" | "branch_id" | "rescheduled_from_id" | "reminder_sent" | "booked_by_staff" | "walk_in_name" | "walk_in_phone" | "walk_in_email" | "google_event_id" | "created_at" | "updated_at", ExtArgs["result"]["appointment"]>
   export type AppointmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     institution?: boolean | InstitutionDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
@@ -22614,6 +22664,7 @@ export namespace Prisma {
       walk_in_name: string | null
       walk_in_phone: string | null
       walk_in_email: string | null
+      google_event_id: string | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["appointment"]>
@@ -23059,6 +23110,7 @@ export namespace Prisma {
     readonly walk_in_name: FieldRef<"Appointment", 'String'>
     readonly walk_in_phone: FieldRef<"Appointment", 'String'>
     readonly walk_in_email: FieldRef<"Appointment", 'String'>
+    readonly google_event_id: FieldRef<"Appointment", 'String'>
     readonly created_at: FieldRef<"Appointment", 'DateTime'>
     readonly updated_at: FieldRef<"Appointment", 'DateTime'>
   }
@@ -25766,7 +25818,10 @@ export namespace Prisma {
     password_hash: 'password_hash',
     status: 'status',
     created_at: 'created_at',
-    updated_at: 'updated_at'
+    updated_at: 'updated_at',
+    google_access_token: 'google_access_token',
+    google_refresh_token: 'google_refresh_token',
+    google_calendar_id: 'google_calendar_id'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -25991,6 +26046,7 @@ export namespace Prisma {
     walk_in_name: 'walk_in_name',
     walk_in_phone: 'walk_in_phone',
     walk_in_email: 'walk_in_email',
+    google_event_id: 'google_event_id',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -26213,6 +26269,9 @@ export namespace Prisma {
     status?: EnumUserStatusFilter<"User"> | $Enums.UserStatus
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
+    google_access_token?: StringNullableFilter<"User"> | string | null
+    google_refresh_token?: StringNullableFilter<"User"> | string | null
+    google_calendar_id?: StringNullableFilter<"User"> | string | null
     roles?: UserRoleListRelationFilter
     sessions?: AuthSessionListRelationFilter
     institution_memberships?: InstitutionUserListRelationFilter
@@ -26230,6 +26289,9 @@ export namespace Prisma {
     status?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    google_access_token?: SortOrderInput | SortOrder
+    google_refresh_token?: SortOrderInput | SortOrder
+    google_calendar_id?: SortOrderInput | SortOrder
     roles?: UserRoleOrderByRelationAggregateInput
     sessions?: AuthSessionOrderByRelationAggregateInput
     institution_memberships?: InstitutionUserOrderByRelationAggregateInput
@@ -26250,6 +26312,9 @@ export namespace Prisma {
     status?: EnumUserStatusFilter<"User"> | $Enums.UserStatus
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
+    google_access_token?: StringNullableFilter<"User"> | string | null
+    google_refresh_token?: StringNullableFilter<"User"> | string | null
+    google_calendar_id?: StringNullableFilter<"User"> | string | null
     roles?: UserRoleListRelationFilter
     sessions?: AuthSessionListRelationFilter
     institution_memberships?: InstitutionUserListRelationFilter
@@ -26267,6 +26332,9 @@ export namespace Prisma {
     status?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    google_access_token?: SortOrderInput | SortOrder
+    google_refresh_token?: SortOrderInput | SortOrder
+    google_calendar_id?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -26285,6 +26353,9 @@ export namespace Prisma {
     status?: EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
     created_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    google_access_token?: StringNullableWithAggregatesFilter<"User"> | string | null
+    google_refresh_token?: StringNullableWithAggregatesFilter<"User"> | string | null
+    google_calendar_id?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type RoleWhereInput = {
@@ -27399,6 +27470,7 @@ export namespace Prisma {
     walk_in_name?: StringNullableFilter<"Appointment"> | string | null
     walk_in_phone?: StringNullableFilter<"Appointment"> | string | null
     walk_in_email?: StringNullableFilter<"Appointment"> | string | null
+    google_event_id?: StringNullableFilter<"Appointment"> | string | null
     created_at?: DateTimeFilter<"Appointment"> | Date | string
     updated_at?: DateTimeFilter<"Appointment"> | Date | string
     institution?: XOR<InstitutionScalarRelationFilter, InstitutionWhereInput>
@@ -27424,6 +27496,7 @@ export namespace Prisma {
     walk_in_name?: SortOrderInput | SortOrder
     walk_in_phone?: SortOrderInput | SortOrder
     walk_in_email?: SortOrderInput | SortOrder
+    google_event_id?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     institution?: InstitutionOrderByWithRelationInput
@@ -27452,6 +27525,7 @@ export namespace Prisma {
     walk_in_name?: StringNullableFilter<"Appointment"> | string | null
     walk_in_phone?: StringNullableFilter<"Appointment"> | string | null
     walk_in_email?: StringNullableFilter<"Appointment"> | string | null
+    google_event_id?: StringNullableFilter<"Appointment"> | string | null
     created_at?: DateTimeFilter<"Appointment"> | Date | string
     updated_at?: DateTimeFilter<"Appointment"> | Date | string
     institution?: XOR<InstitutionScalarRelationFilter, InstitutionWhereInput>
@@ -27477,6 +27551,7 @@ export namespace Prisma {
     walk_in_name?: SortOrderInput | SortOrder
     walk_in_phone?: SortOrderInput | SortOrder
     walk_in_email?: SortOrderInput | SortOrder
+    google_event_id?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: AppointmentCountOrderByAggregateInput
@@ -27502,6 +27577,7 @@ export namespace Prisma {
     walk_in_name?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
     walk_in_phone?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
     walk_in_email?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
+    google_event_id?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
   }
@@ -27643,6 +27719,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleCreateNestedManyWithoutUserInput
     sessions?: AuthSessionCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserCreateNestedManyWithoutUserInput
@@ -27660,6 +27739,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     sessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserUncheckedCreateNestedManyWithoutUserInput
@@ -27677,6 +27759,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUpdateManyWithoutUserNestedInput
@@ -27694,6 +27779,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUncheckedUpdateManyWithoutUserNestedInput
@@ -27711,6 +27799,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -27723,6 +27814,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -27735,6 +27829,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type RoleCreateInput = {
@@ -28894,6 +28991,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -28919,6 +29017,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -28936,6 +29035,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -28961,6 +29061,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -28982,6 +29083,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -28997,6 +29099,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -29016,6 +29119,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -29247,6 +29351,9 @@ export namespace Prisma {
     status?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    google_access_token?: SortOrder
+    google_refresh_token?: SortOrder
+    google_calendar_id?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -29259,6 +29366,9 @@ export namespace Prisma {
     status?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    google_access_token?: SortOrder
+    google_refresh_token?: SortOrder
+    google_calendar_id?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -29271,6 +29381,9 @@ export namespace Prisma {
     status?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    google_access_token?: SortOrder
+    google_refresh_token?: SortOrder
+    google_calendar_id?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -30202,6 +30315,7 @@ export namespace Prisma {
     walk_in_name?: SortOrder
     walk_in_phone?: SortOrder
     walk_in_email?: SortOrder
+    google_event_id?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -30221,6 +30335,7 @@ export namespace Prisma {
     walk_in_name?: SortOrder
     walk_in_phone?: SortOrder
     walk_in_email?: SortOrder
+    google_event_id?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -30240,6 +30355,7 @@ export namespace Prisma {
     walk_in_name?: SortOrder
     walk_in_phone?: SortOrder
     walk_in_email?: SortOrder
+    google_event_id?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -32141,6 +32257,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -32164,6 +32281,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -32320,6 +32438,7 @@ export namespace Prisma {
     walk_in_name?: StringNullableFilter<"Appointment"> | string | null
     walk_in_phone?: StringNullableFilter<"Appointment"> | string | null
     walk_in_email?: StringNullableFilter<"Appointment"> | string | null
+    google_event_id?: StringNullableFilter<"Appointment"> | string | null
     created_at?: DateTimeFilter<"Appointment"> | Date | string
     updated_at?: DateTimeFilter<"Appointment"> | Date | string
   }
@@ -32397,6 +32516,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     sessions?: AuthSessionCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -32413,6 +32535,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     sessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -32459,6 +32584,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     sessions?: AuthSessionUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -32475,6 +32603,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     sessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -32511,6 +32642,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -32527,6 +32661,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -32559,6 +32696,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -32575,6 +32715,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -33030,6 +33173,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     service: ServiceCreateNestedOneWithoutAppointmentsInput
@@ -33053,6 +33197,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -33504,6 +33649,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleCreateNestedManyWithoutUserInput
     sessions?: AuthSessionCreateNestedManyWithoutUserInput
     appointments?: AppointmentCreateNestedManyWithoutUserInput
@@ -33520,6 +33668,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     sessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutUserInput
@@ -33609,6 +33760,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUpdateManyWithoutUserNestedInput
@@ -33625,6 +33779,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutUserNestedInput
@@ -33723,6 +33880,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -33746,6 +33904,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -34182,6 +34341,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -34205,6 +34365,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -34870,6 +35031,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleCreateNestedManyWithoutUserInput
     sessions?: AuthSessionCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserCreateNestedManyWithoutUserInput
@@ -34886,6 +35050,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     sessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserUncheckedCreateNestedManyWithoutUserInput
@@ -35102,6 +35269,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUpdateManyWithoutUserNestedInput
@@ -35118,6 +35288,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUncheckedUpdateManyWithoutUserNestedInput
@@ -35227,6 +35400,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -35251,6 +35425,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     review?: ReviewUncheckedCreateNestedOneWithoutAppointmentInput
@@ -35312,6 +35487,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -35336,6 +35512,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     review?: ReviewUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -35387,6 +35564,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     institution: InstitutionCreateNestedOneWithoutAppointmentsInput
@@ -35411,6 +35589,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     responses?: AppointmentFieldResponseUncheckedCreateNestedManyWithoutAppointmentInput
@@ -35482,6 +35661,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleCreateNestedManyWithoutUserInput
     sessions?: AuthSessionCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserCreateNestedManyWithoutUserInput
@@ -35498,6 +35680,9 @@ export namespace Prisma {
     status?: $Enums.UserStatus
     created_at?: Date | string
     updated_at?: Date | string
+    google_access_token?: string | null
+    google_refresh_token?: string | null
+    google_calendar_id?: string | null
     roles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     sessions?: AuthSessionUncheckedCreateNestedManyWithoutUserInput
     institution_memberships?: InstitutionUserUncheckedCreateNestedManyWithoutUserInput
@@ -35531,6 +35716,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -35555,6 +35741,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -35638,6 +35825,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUpdateManyWithoutUserNestedInput
@@ -35654,6 +35844,9 @@ export namespace Prisma {
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    google_access_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    google_calendar_id?: NullableStringFieldUpdateOperationsInput | string | null
     roles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     sessions?: AuthSessionUncheckedUpdateManyWithoutUserNestedInput
     institution_memberships?: InstitutionUserUncheckedUpdateManyWithoutUserNestedInput
@@ -35692,6 +35885,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -35770,6 +35964,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -35793,6 +35988,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -35813,6 +36009,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36003,6 +36200,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -36145,6 +36343,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -36168,6 +36367,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -36188,6 +36388,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36328,6 +36529,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -36388,6 +36590,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -36411,6 +36614,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -36431,6 +36635,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36494,6 +36699,7 @@ export namespace Prisma {
     walk_in_name?: string | null
     walk_in_phone?: string | null
     walk_in_email?: string | null
+    google_event_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -36526,6 +36732,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     institution?: InstitutionUpdateOneRequiredWithoutAppointmentsNestedInput
@@ -36549,6 +36756,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     responses?: AppointmentFieldResponseUncheckedUpdateManyWithoutAppointmentNestedInput
@@ -36569,6 +36777,7 @@ export namespace Prisma {
     walk_in_name?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_phone?: NullableStringFieldUpdateOperationsInput | string | null
     walk_in_email?: NullableStringFieldUpdateOperationsInput | string | null
+    google_event_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }

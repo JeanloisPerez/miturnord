@@ -162,6 +162,34 @@ function SuccessScreen({ turnCode, institution, service, branch, date, slot, onM
                     </div>
                 ))}
             </div>
+
+            <a 
+                href={(() => {
+                    const base = "https://calendar.google.com/calendar/render?action=TEMPLATE";
+                    const title = encodeURIComponent(`Cita en ${institution.name}: ${service?.name || 'Servicio'}`);
+                    const localDateTimeStr = `${date}T${slot}:00`;
+                    const localDate = new Date(localDateTimeStr);
+                    const formatUTC = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                    const start = formatUTC(localDate);
+                    const durationMinutes = service?.duration || 30;
+                    const endDate = new Date(localDate.getTime() + durationMinutes * 60 * 1000);
+                    const end = formatUTC(endDate);
+                    const details = encodeURIComponent(`Servicio: ${service?.name || 'Servicio'}\nSucursal: ${branch?.name || ''}`);
+                    const location = encodeURIComponent(`${branch?.name || ''} ${branch?.address || ''}`);
+                    return `${base}&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+                })()} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-full py-4 bg-white border border-gray-200 text-gray-700 font-bold text-sm rounded-[20px] hover:bg-gray-50 flex items-center justify-center gap-2.5 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
+            >
+                <svg className="w-5 h-5" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.53 2.87-2.13 5.31-4.5 6.9l7.02 5.44C43.38 36.31 46.5 30.82 46.5 24z"/>
+                    <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.02-5.44c-1.97 1.33-4.52 2.13-8.87 2.13-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Añadir a Google Calendar
+            </a>
             
             <button onClick={onMyAppts}
                 className="w-full py-4 bg-black text-white font-black text-sm rounded-[20px] hover:bg-gray-900 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">

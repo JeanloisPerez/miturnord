@@ -19,6 +19,7 @@ import { EmailsModule } from './emails/emails.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RemindersModule } from './reminders/reminders.module';
 import { SystemSettingsModule } from './system-settings/system-settings.module';
+import { GoogleCalendarModule } from './google-calendar/google-calendar.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SystemSettingsModule } from './system-settings/system-settings.module';
     EmailsModule,
     RemindersModule,
     SystemSettingsModule,
+    GoogleCalendarModule,
   ],
 })
 export class AppModule { }

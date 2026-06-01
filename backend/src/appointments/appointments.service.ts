@@ -6,6 +6,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SchedulingEngineService } from '../scheduling-engine/scheduling-engine.service';
 import { EmailsService } from '../emails/emails.service';
+import { GoogleCalendarService } from '../google-calendar/google-calendar.service';
 
 const APPOINTMENT_INCLUDE = {
   service: { select: { id: true, name: true, duration: true, price: true } },
@@ -22,6 +23,7 @@ export class AppointmentsService {
     private prisma: PrismaService,
     private schedulingEngine: SchedulingEngineService,
     private emailsService: EmailsService,
+    private googleCalendar: GoogleCalendarService,
   ) { }
 
   async create(dto: CreateAppointmentDto, userId: string) {
@@ -119,6 +121,16 @@ export class AppointmentsService {
           result.institution.name
         ).catch(e => console.error('Fallo al enviar correo desde AppointmentsService:', e));
       }
+
+      // Sincronización asíncrona con Google Calendar
+      this.googleCalendar.createEvent(result).then(async (eventId) => {
+        if (eventId) {
+          await this.prisma.appointment.update({
+            where: { id: result.id },
+            data: { google_event_id: eventId },
+          });
+        }
+      }).catch(e => console.error('Fallo al sincronizar cita con Google Calendar:', e));
     }
 
     return result;
@@ -240,6 +252,32 @@ export class AppointmentsService {
       }
     }
 
+    // Sincronizar cambios en Google Calendar de forma asíncrona
+    if (updated.status === 'CONFIRMED') {
+      if (updated.google_event_id) {
+        this.googleCalendar.updateEvent(updated, updated.google_event_id)
+          .catch(e => console.error('Error al actualizar evento de Google Calendar:', e));
+      } else {
+        this.googleCalendar.createEvent(updated).then(async (eventId) => {
+          if (eventId) {
+            await this.prisma.appointment.update({
+              where: { id: updated.id },
+              data: { google_event_id: eventId },
+            });
+          }
+        }).catch(e => console.error('Error al crear evento en Google Calendar tras actualización:', e));
+      }
+    } else if (['CANCELLED', 'NO_SHOW'].includes(updated.status) && updated.google_event_id) {
+      this.googleCalendar.deleteEvent(updated, updated.google_event_id)
+        .then(async () => {
+          await this.prisma.appointment.update({
+            where: { id: updated.id },
+            data: { google_event_id: null },
+          });
+        })
+        .catch(e => console.error('Error al eliminar evento de Google Calendar:', e));
+    }
+
     return updated;
   }
 
@@ -258,11 +296,24 @@ export class AppointmentsService {
     if (!['PENDING', 'CONFIRMED'].includes(appointment.status))
       throw new BadRequestException('Solo se pueden cancelar citas pendientes o confirmadas');
 
-    return this.prisma.appointment.update({
+    const cancelled = await this.prisma.appointment.update({
       where: { id },
       data: { status: 'CANCELLED' },
       include: APPOINTMENT_INCLUDE,
     });
+
+    if (cancelled.google_event_id) {
+      this.googleCalendar.deleteEvent(cancelled, cancelled.google_event_id)
+        .then(async () => {
+          await this.prisma.appointment.update({
+            where: { id: cancelled.id },
+            data: { google_event_id: null },
+          });
+        })
+        .catch(e => console.error('Error al eliminar evento en Google Calendar tras cancelación:', e));
+    }
+
+    return cancelled;
   }
 
   async getInstitutionClients(institutionId: string, userId: string, userRole: string) {

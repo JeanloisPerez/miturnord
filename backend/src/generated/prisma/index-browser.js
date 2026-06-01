@@ -129,7 +129,10 @@ exports.Prisma.UserScalarFieldEnum = {
   password_hash: 'password_hash',
   status: 'status',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  google_access_token: 'google_access_token',
+  google_refresh_token: 'google_refresh_token',
+  google_calendar_id: 'google_calendar_id'
 };
 
 exports.Prisma.RoleScalarFieldEnum = {
@@ -303,6 +306,7 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   walk_in_name: 'walk_in_name',
   walk_in_phone: 'walk_in_phone',
   walk_in_email: 'walk_in_email',
+  google_event_id: 'google_event_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };

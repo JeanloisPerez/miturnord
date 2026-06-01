@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { GoogleCalendarService } from '../google-calendar/google-calendar.service';
 
 export interface SlotValidationResult {
     available: boolean;
@@ -10,7 +11,10 @@ export interface SlotValidationResult {
 
 @Injectable()
 export class SchedulingEngineService {
-    constructor(private prisma: PrismaService) { }
+    constructor(
+        private prisma: PrismaService,
+        private googleCalendar: GoogleCalendarService,
+    ) { }
 
     /**
      * Devuelve los espacios (slots) HH:MM disponibles para una sucursal, servicio y fecha dados.
@@ -106,14 +110,42 @@ export class SchedulingEngineService {
             }));
         }
 
-        // 7. Eliminar espacios que colisionan con citas existentes o tiempos bloqueados
+        // Obtener tiempos ocupados en Google Calendar de los empleados vinculados
+        const staffMembers = await this.prisma.institutionUser.findMany({
+            where: {
+                institution_id: institutionId,
+                user: {
+                    NOT: { google_refresh_token: null },
+                },
+            },
+        });
+
+        const googleBusySlots: { start: number; end: number }[] = [];
+        for (const staff of staffMembers) {
+            const busyList = await this.googleCalendar.getBusySlots(
+                staff.user_id,
+                dayStart,
+                dayEnd
+            );
+            for (const busy of busyList) {
+                const startM = busy.start.getUTCHours() * 60 + busy.start.getUTCMinutes();
+                const endM = busy.end.getUTCHours() * 60 + busy.end.getUTCMinutes();
+                googleBusySlots.push({ start: startM, end: endM });
+            }
+        }
+
+        // 7. Eliminar espacios que colisionan con citas existentes, tiempos bloqueados o Google Calendar
         const availableSlots = allSlots.filter((slot) => {
             const slotStart = this.timeToMinutes(slot);
             const slotEnd = slotStart + service.duration;
 
-            // Revisar tiempos bloqueados
+            // Revisar tiempos bloqueados de administración
             const isBlocked = blockedSlots.some((b) => slotStart < b.end && slotEnd > b.start);
             if (isBlocked) return false;
+
+            // Revisar tiempos bloqueados en Google Calendar
+            const isGoogleBusy = googleBusySlots.some((b) => slotStart < b.end && slotEnd > b.start);
+            if (isGoogleBusy) return false;
 
             // Contar ocupación para este slot
             const occupancy = existingAppointments.filter((appt) => {

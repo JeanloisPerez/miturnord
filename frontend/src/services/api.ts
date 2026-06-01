@@ -92,6 +92,10 @@ export const getAvailableSlots = (params: {
     branchId?: string;
 }) => api.get('/scheduling-engine/getAvailableSlots', { params });
 
+// ── Google Calendar ──────────────────────────────────────────────────
+export const connectGoogleCalendar = () => api.get('/google-calendar/connect');
+export const disconnectGoogleCalendar = () => api.post('/google-calendar/disconnect');
+
 // ── Appointments ────────────────────────────────────────────────────────
 export const getAppointments = () => api.get('/appointments/appointmentList');
 export const getAppointmentsByInstitution = (institutionId: string, filters?: object) =>
