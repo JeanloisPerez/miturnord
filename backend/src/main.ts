@@ -12,7 +12,10 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  app.enableCors({ origin: ['http://localhost:5173', 'http://localhost:5174'], credentials: true });
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('MiTurnoRD API')
