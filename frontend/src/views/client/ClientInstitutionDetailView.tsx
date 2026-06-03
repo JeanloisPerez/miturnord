@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { 
-    ChevronLeft, CheckCircle, Clock, ChevronRight, Building2, MapPin, 
-    Phone, Calendar, AlertCircle, Loader2, Sparkles, Star, Mail, ShieldCheck 
+import {
+    ChevronLeft, CheckCircle, Clock, ChevronRight, Building2, MapPin,
+    Phone, Calendar, AlertCircle, Loader2, Sparkles, Star, Mail, ShieldCheck
 } from 'lucide-react';
 import { getInstitution, getServicesByInstitution, getServicesByBranch, getBranches, getAvailableSlots, createAppointment, getCustomFields } from '../../services/api';
 import { fmt, todayStr, FIELD_INPUTS, generateTurnCode, getTypeGradient } from './clientShared';
 import type { Institution, Branch, Service } from './clientShared';
 
 import { ImageUploader } from '../owner/ownerShared';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 // ─── Helper Functions ──────────────────────────────────────────────────────────
 function formatTime12h(timeStr: string): string {
@@ -25,7 +26,7 @@ function formatSchedules(schedules: any[]): string {
     }
     const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
     const sorted = [...schedules].sort((a, b) => a.day_of_week - b.day_of_week);
-    
+
     const daySchedules = sorted.map(s => {
         const dayName = days[s.day_of_week];
         const start = formatTime12h(s.start_time);
@@ -35,27 +36,27 @@ function formatSchedules(schedules: any[]): string {
 
     const groups: string[] = [];
     let startIdx = 0;
-    
+
     while (startIdx < daySchedules.length) {
         let endIdx = startIdx;
         while (
-            endIdx + 1 < daySchedules.length && 
+            endIdx + 1 < daySchedules.length &&
             daySchedules[endIdx + 1].day_of_week === daySchedules[endIdx].day_of_week + 1 &&
             daySchedules[endIdx + 1].time === daySchedules[startIdx].time
         ) {
             endIdx++;
         }
-        
+
         const timeStr = daySchedules[startIdx].time;
         if (startIdx === endIdx) {
             groups.push(`${daySchedules[startIdx].dayName}: ${timeStr}`);
         } else {
             groups.push(`${daySchedules[startIdx].dayName}-${daySchedules[endIdx].dayName}: ${timeStr}`);
         }
-        
+
         startIdx = endIdx + 1;
     }
-    
+
     return groups.join(', ');
 }
 
@@ -73,15 +74,15 @@ function Stepper({ currentStep }: { currentStep: number }) {
         <div className="flex items-center justify-between max-w-2xl mx-auto mb-8 relative px-2">
             {/* Background connecting line */}
             <div className="absolute left-8 right-8 top-5 h-1 bg-gray-100 -translate-y-1/2 z-0"></div>
-            
+
             {/* Active connecting line */}
-            <div 
+            <div
                 className="absolute left-8 top-5 h-1 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500 ease-out"
-                style={{ 
-                    width: currentStep === 1 ? '0%' : 
-                           currentStep === 2 ? '25%' : 
-                           currentStep === 3 ? '50%' : 
-                           currentStep === 4 ? '75%' : '100%',
+                style={{
+                    width: currentStep === 1 ? '0%' :
+                        currentStep === 2 ? '25%' :
+                            currentStep === 3 ? '50%' :
+                                currentStep === 4 ? '75%' : '100%',
                     maxWidth: 'calc(100% - 64px)'
                 }}
             ></div>
@@ -90,14 +91,14 @@ function Stepper({ currentStep }: { currentStep: number }) {
                 const stepNum = s.id;
                 const isCompleted = currentStep > stepNum;
                 const isActive = currentStep === stepNum;
-                
+
                 return (
                     <div key={s.id} className="relative z-10 flex flex-col items-center gap-2 flex-1">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500
-                            ${isCompleted 
-                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
-                                : isActive 
-                                    ? 'bg-blue-600 text-white shadow-[0_0_0_4px_rgba(37,99,235,0.15)] scale-110' 
+                            ${isCompleted
+                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                                : isActive
+                                    ? 'bg-blue-600 text-white shadow-[0_0_0_4px_rgba(37,99,235,0.15)] scale-110'
                                     : 'bg-white text-gray-400 border-2 border-gray-100'}`}>
                             {isCompleted ? <CheckCircle size={16} strokeWidth={2.5} /> : stepNum}
                         </div>
@@ -123,12 +124,12 @@ function SuccessScreen({ turnCode, institution, service, branch, date, slot, onM
                     <CheckCircle size={50} className="text-white" strokeWidth={2.5} />
                 </div>
             </div>
-            
+
             <div>
                 <h2 className="text-2xl font-black text-gray-900 tracking-tight">¡Turno Confirmado!</h2>
                 <p className="text-gray-500 mt-2">Guarda este código para cuando llegues a la sucursal.</p>
             </div>
-            
+
             <div className="bg-white border-2 border-dashed border-gray-200 rounded-[32px] p-8 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2">CÓDIGO DE TURNO</p>
@@ -147,9 +148,9 @@ function SuccessScreen({ turnCode, institution, service, branch, date, slot, onM
 
             <div className="bg-gray-50 rounded-3xl p-5 text-left space-y-3 shadow-inner">
                 {[
-                    ['Institución', institution.name, <Building2 size={14} className="text-gray-400"/>],
-                    service && ['Servicio', service.name, <Sparkles size={14} className="text-gray-400"/>],
-                    branch && ['Sucursal', branch.name, <MapPin size={14} className="text-gray-400"/>],
+                    ['Institución', institution.name, <Building2 size={14} className="text-gray-400" />],
+                    service && ['Servicio', service.name, <Sparkles size={14} className="text-gray-400" />],
+                    branch && ['Sucursal', branch.name, <MapPin size={14} className="text-gray-400" />],
                 ].filter(Boolean).map((r: any, i) => (
                     <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
@@ -163,7 +164,7 @@ function SuccessScreen({ turnCode, institution, service, branch, date, slot, onM
                 ))}
             </div>
 
-            <a 
+            <a
                 href={(() => {
                     const base = "https://calendar.google.com/calendar/render?action=TEMPLATE";
                     const title = encodeURIComponent(`Cita en ${institution.name}: ${service?.name || 'Servicio'}`);
@@ -177,20 +178,20 @@ function SuccessScreen({ turnCode, institution, service, branch, date, slot, onM
                     const details = encodeURIComponent(`Servicio: ${service?.name || 'Servicio'}\nSucursal: ${branch?.name || ''}`);
                     const location = encodeURIComponent(`${branch?.name || ''} ${branch?.address || ''}`);
                     return `${base}&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-                })()} 
-                target="_blank" 
+                })()}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-4 bg-white border border-gray-200 text-gray-700 font-bold text-sm rounded-[20px] hover:bg-gray-50 flex items-center justify-center gap-2.5 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5"
             >
                 <svg className="w-5 h-5" viewBox="0 0 48 48">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.53 2.87-2.13 5.31-4.5 6.9l7.02 5.44C43.38 36.31 46.5 30.82 46.5 24z"/>
-                    <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.02-5.44c-1.97 1.33-4.52 2.13-8.87 2.13-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                    <path fill="#4285F4" d="M46.5 24c0-1.55-.15-3.24-.47-4.77H24v9.03h12.75c-.53 2.87-2.13 5.31-4.5 6.9l7.02 5.44C43.38 36.31 46.5 30.82 46.5 24z" />
+                    <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z" />
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.02-5.44c-1.97 1.33-4.52 2.13-8.87 2.13-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
                 </svg>
                 Añadir a Google Calendar
             </a>
-            
+
             <button onClick={onMyAppts}
                 className="w-full py-4 bg-black text-white font-black text-sm rounded-[20px] hover:bg-gray-900 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 Ver mis turnos
@@ -215,28 +216,28 @@ export default function ClientInstitutionDetailView({
 
     // Modes: isBooking=true handles the Stepper Wizard, isBooking=false handles the Profile View
     const [isBooking, setIsBooking] = useState(false);
-    
+
     // Stepper Wizard steps: 1=Servicio, 2=Sucursal, 3=Horario, 4=Información, 5=Confirmación
     const [bookStep, setBookStep] = useState<number>(1);
-    
+
     const [selService, setSelService] = useState<Service | null>(null);
     const [selBranch, setSelBranch] = useState<Branch | null>(null);
     const [selDate, setSelDate] = useState('');
     const [slots, setSlots] = useState<string[]>([]);
     const [selSlot, setSelSlot] = useState('');
     const [slotsLoading, setSlotsLoading] = useState(false);
-    
+
     // Booking Form
     const [notes, setNotes] = useState('');
     const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
     const [bookLoading, setBookLoading] = useState(false);
     const [bookError, setBookError] = useState('');
-    
+
     // Success State
     const [confirmedAppt, setConfirmedAppt] = useState<any>(null);
     const [turnCode, setTurnCode] = useState('');
     const [dynFields, setDynFields] = useState<any[]>([]);
-    
+
     // Services filtered by selected branch
     const [branchServices, setBranchServices] = useState<Service[] | null>(null);
 
@@ -253,7 +254,7 @@ export default function ClientInstitutionDetailView({
             setInstitution(full.data);
             setServices(svcs.data);
             setBranches(brs.data);
-            
+
             // Auto-select branch if only one exists
             if (brs.data.length === 1) {
                 setSelBranch(brs.data[0]);
@@ -381,7 +382,7 @@ export default function ClientInstitutionDetailView({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 </div>
             )}
-            
+
             {/* Top Bar inside Hero */}
             <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center z-10 pt-6 sm:pt-4">
                 <button onClick={isBooking ? () => setIsBooking(false) : onBack}
@@ -411,7 +412,7 @@ export default function ClientInstitutionDetailView({
     // Calculate rating details
     const reviews = institution.reviews || [];
     const ratingCount = reviews.length;
-    const ratingAvg = ratingCount > 0 
+    const ratingAvg = ratingCount > 0
         ? (reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / ratingCount).toFixed(1)
         : '4.8';
     const ratingLabel = ratingCount > 0 ? `${ratingAvg} (${ratingCount} reseñas)` : '4.8 (245 reseñas)';
@@ -443,7 +444,7 @@ export default function ClientInstitutionDetailView({
                                     <span>{ratingLabel}</span>
                                 </div>
                             </div>
-                            
+
                             {institution.description ? (
                                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{institution.description}</p>
                             ) : (
@@ -501,19 +502,19 @@ export default function ClientInstitutionDetailView({
                         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
                             {/* Segmented Tab Headers */}
                             <div className="flex p-1 bg-gray-100 rounded-2xl max-w-sm">
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('services')}
                                     className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${activeTab === 'services' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                                 >
                                     Servicios
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('branches')}
                                     className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${activeTab === 'branches' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                                 >
                                     Sucursales
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setActiveTab('reviews')}
                                     className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${activeTab === 'reviews' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
                                 >
@@ -533,8 +534,8 @@ export default function ClientInstitutionDetailView({
                                             </div>
                                         ) : (
                                             services.map(s => (
-                                                <button 
-                                                    key={s.id} 
+                                                <button
+                                                    key={s.id}
                                                     onClick={() => handleServiceSelect(s)}
                                                     className="w-full text-left group bg-blue-50/30 hover:bg-blue-50/70 border border-blue-100/30 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 transition-all hover:scale-[1.01]"
                                                 >
@@ -573,7 +574,7 @@ export default function ClientInstitutionDetailView({
                                             </div>
                                         ) : (
                                             branches.map(b => (
-                                                <button 
+                                                <button
                                                     key={b.id}
                                                     onClick={() => handleBranchSelect(b)}
                                                     className="w-full text-left group bg-gray-50 hover:bg-gray-100 border border-gray-100 hover:border-gray-300 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4 transition-all"
@@ -644,7 +645,7 @@ export default function ClientInstitutionDetailView({
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-[32px] border border-gray-100 p-6 sm:p-8 shadow-xl sticky top-20 space-y-6">
                             <h3 className="font-extrabold text-lg text-gray-900">Reservar Turno</h3>
-                            
+
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between text-xs sm:text-sm bg-gray-50 border border-gray-100/50 p-3 rounded-2xl">
                                     <span className="text-gray-500 font-medium">Próxima disponibilidad</span>
@@ -656,7 +657,7 @@ export default function ClientInstitutionDetailView({
                                 </div>
                             </div>
 
-                            <button 
+                            <button
                                 onClick={handleLaunchBooking}
                                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm rounded-[20px] shadow-lg shadow-blue-600/20 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
                             >
@@ -690,18 +691,18 @@ export default function ClientInstitutionDetailView({
                                     Atrás al perfil
                                 </button>
                             </div>
-                            
+
                             <div className="grid gap-3">
                                 {displayedServices.map(s => (
-                                    <button 
-                                        key={s.id} 
+                                    <button
+                                        key={s.id}
                                         onClick={() => handleServiceSelect(s)}
                                         className={`group w-full bg-white border rounded-[24px] p-5 text-left transition-all duration-300 flex items-center justify-between gap-4 focus:outline-none focus:ring-4 ring-gray-50
                                             ${selService?.id === s.id ? 'border-blue-600 bg-blue-50/20' : 'border-gray-100 hover:border-gray-300 hover:shadow-md'}`}
                                     >
                                         <div className="flex items-center gap-4 w-full">
                                             {s.image_url ? (
-                                                <img src={s.image_url} alt={s.name} className="w-14 h-14 rounded-2xl object-cover shrink-0 border border-gray-100" />
+                                                <img src={getImageUrl(s.image_url)} alt={s.name} className="w-14 h-14 rounded-2xl object-cover shrink-0 border border-gray-100" />
                                             ) : (
                                                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
                                                     <Sparkles size={20} className="text-gray-400" />
@@ -734,7 +735,7 @@ export default function ClientInstitutionDetailView({
                                     <p className="text-sm text-gray-500 mt-1">Elige la sucursal de tu preferencia para la atención</p>
                                 </div>
                             </div>
-                            
+
                             {branches.length === 0 ? (
                                 <div className="bg-gray-50 rounded-[24px] p-10 text-center border border-gray-100">
                                     <Building2 size={32} className="mx-auto text-gray-300 mb-3" />
@@ -743,9 +744,9 @@ export default function ClientInstitutionDetailView({
                             ) : (
                                 <div className="grid gap-3">
                                     {branches.map(b => (
-                                        <button 
-                                            key={b.id} 
-                                            onClick={() => { setSelBranch(b); setBookStep(3); }} 
+                                        <button
+                                            key={b.id}
+                                            onClick={() => { setSelBranch(b); setBookStep(3); }}
                                             className={`group w-full text-left p-5 flex items-center gap-4 rounded-[24px] border transition-all duration-300 focus:outline-none
                                                 ${selBranch?.id === b.id ? 'border-blue-600 bg-blue-50/20 shadow-md' : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-md'}`}
                                         >
@@ -788,7 +789,7 @@ export default function ClientInstitutionDetailView({
                                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5">
                                     <Calendar size={12} /> Selecciona Fecha
                                 </label>
-                                <input type="date" value={selDate} min={todayStr()} onChange={e => handleDateChange(e.target.value)} 
+                                <input type="date" value={selDate} min={todayStr()} onChange={e => handleDateChange(e.target.value)}
                                     className="w-full bg-white border-2 border-transparent focus:border-black rounded-xl px-4 py-3 font-bold text-gray-900 transition-all shadow-sm outline-none" />
                             </div>
 
@@ -797,7 +798,7 @@ export default function ClientInstitutionDetailView({
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em] mb-4 flex items-center gap-1.5">
                                         <Clock size={12} /> Horarios disponibles
                                     </label>
-                                    
+
                                     {slotsLoading ? (
                                         <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-gray-400" /></div>
                                     ) : slots.length === 0 ? (
@@ -810,8 +811,8 @@ export default function ClientInstitutionDetailView({
                                             {slots.map(slot => (
                                                 <button key={slot} onClick={() => setSelSlot(slot)}
                                                     className={`py-3 px-1 rounded-2xl text-sm font-black transition-all duration-200 active:scale-95 border-2
-                                                        ${selSlot === slot 
-                                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20' 
+                                                        ${selSlot === slot
+                                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
                                                             : 'bg-white text-gray-700 border-gray-100 hover:border-gray-300 hover:bg-gray-50'}`}>
                                                     {slot}
                                                 </button>
@@ -885,14 +886,14 @@ export default function ClientInstitutionDetailView({
                                                         <ImageUploader value={fieldValues[f.id] || ''} onChange={val => setFieldValues(v => ({ ...v, [f.id]: val }))} label="" />
                                                     ) : f.field_type === 'SELECT' ? (
                                                         <select value={fieldValues[f.id] || ''} required={f.required}
-                                                            onChange={e => setFieldValues(v => ({ ...v, [f.id]: e.target.value }))} 
+                                                            onChange={e => setFieldValues(v => ({ ...v, [f.id]: e.target.value }))}
                                                             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-black transition-all">
                                                             <option value="">Selecciona...</option>
                                                             {JSON.parse(f.options || '[]').map((o: string) => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     ) : (
                                                         <input type={FIELD_INPUTS[f.field_type] || 'text'} required={f.required} value={fieldValues[f.id] || ''} placeholder={f.placeholder || ''}
-                                                            onChange={e => setFieldValues(v => ({ ...v, [f.id]: e.target.value }))} 
+                                                            onChange={e => setFieldValues(v => ({ ...v, [f.id]: e.target.value }))}
                                                             className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-all" />
                                                     )}
                                                 </div>
@@ -904,7 +905,7 @@ export default function ClientInstitutionDetailView({
                                 <div className="pt-2">
                                     <label className="block text-xs font-bold text-gray-600 mb-1.5 ml-1">Notas adicionales <span className="font-medium text-gray-400">(opcional)</span></label>
                                     <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
-                                        placeholder="¿Alguna indicación especial para el equipo?" 
+                                        placeholder="¿Alguna indicación especial para el equipo?"
                                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-all resize-none" />
                                 </div>
                             </div>

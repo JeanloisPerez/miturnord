@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Clock, Wrench, ToggleRight, ToggleLeft, CheckCircle2, Building2, X, Check, MapPin } from 'lucide-react';
 import { getServicesByInstitution, createService, updateService, deleteService, getBranches, getServiceBranchAssignments, assignServiceToBranch, removeServiceFromBranch } from '../../services/api';
 import { Spinner, Empty, Hdr, btn, ic, ImageUploader } from './ownerShared';
+import { getImageUrl } from '../../utils/getImageUrl';
 
 // ── Branch Assignment Modal ──────────────────────────────────────────────────
 function BranchAssignModal({
@@ -191,7 +192,7 @@ export default function OwnerServicesView({ instId }: { instId: string }) {
                         <div key={s.id} className={`bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all ${s.is_active !== false ? 'border-gray-200' : 'border-gray-100 opacity-60'}`}>
                             {s.image_url ? (
                                 <div className="h-40 w-full overflow-hidden relative group">
-                                    <img src={s.image_url} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img src={getImageUrl(s.image_url)} alt={s.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                     {s.is_active !== false && <span className="absolute top-3 right-3 px-2 py-1 bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm">Activo</span>}
                                 </div>
                             ) : (
@@ -207,11 +208,11 @@ export default function OwnerServicesView({ instId }: { instId: string }) {
                                     <button onClick={() => toggleActive(s.id, !(s.is_active !== false))} className="text-gray-400 hover:text-blue-500 transition shrink-0 mt-0.5" title={s.is_active !== false ? 'Desactivar' : 'Activar'}>{s.is_active !== false ? <ToggleRight size={20} className="text-blue-500" /> : <ToggleLeft size={20} />}</button>
                                 </div>
                                 {s.description && <p className="text-gray-500 text-xs mt-1.5 line-clamp-2 leading-relaxed h-8">{s.description}</p>}
-                                
+
                                 <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
                                     <div className="flex flex-col">
                                         <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Duración</span>
-                                        <span className="flex items-center gap-1 text-sm font-semibold text-gray-800"><Clock size={14} className="text-gray-400"/>{s.duration} min</span>
+                                        <span className="flex items-center gap-1 text-sm font-semibold text-gray-800"><Clock size={14} className="text-gray-400" />{s.duration} min</span>
                                     </div>
                                     <div className="flex flex-col ml-4">
                                         <span className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Precio</span>
@@ -220,8 +221,8 @@ export default function OwnerServicesView({ instId }: { instId: string }) {
                                 </div>
                                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col">
-                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Reservas</p>
-                                         <p className="text-gray-800 font-semibold text-xs">-- este mes</p>
+                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Reservas</p>
+                                        <p className="text-gray-800 font-semibold text-xs">-- este mes</p>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button onClick={() => setAssignModal(s)} title="Asignar a sucursales" className="bg-white text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition p-1.5 rounded-lg border border-gray-200">
