@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
-import { UploadService } from '../upload/upload.service';
 
 export class CreateServiceDto {
     @ApiProperty({ example: 'Consulta General', description: 'Nombre del servicio' })
@@ -31,29 +30,20 @@ export class UpdateServiceDto {
 
 @Injectable()
 export class ServicesService {
-    constructor(
-        private prisma: PrismaService,
-        private uploadService: UploadService,
-    ) { }
-
-    /** Normalize image_url to an absolute URL. */
-    private resolve<T extends Record<string, any>>(svc: T): T {
-        return { ...svc, image_url: this.uploadService.resolveImageUrl(svc.image_url) };
-    }
+    constructor(private prisma: PrismaService) { }
 
     /** Public — list active services for a given institution */
-    async findByInstitution(institution_id: string) {
-        const results = await this.prisma.service.findMany({
+    findByInstitution(institution_id: string) {
+        return this.prisma.service.findMany({
             where: { institution_id, active: true },
             orderBy: { name: 'asc' },
         });
-        return results.map(s => this.resolve(s));
     }
 
     async findOne(id: string) {
         const service = await this.prisma.service.findUnique({ where: { id } });
         if (!service) throw new NotFoundException(`Servicio ${id} no encontrado`);
-        return this.resolve(service);
+        return service;
     }
 
     async create(dto: CreateServiceDto, userId: string) {
@@ -62,7 +52,7 @@ export class ServicesService {
         });
         if (!membership) throw new ForbiddenException('No puedes agregar servicios a esta institución');
 
-        const created = await this.prisma.service.create({
+        return this.prisma.service.create({
             data: {
                 name: dto.name,
                 description: dto.description,
@@ -71,7 +61,6 @@ export class ServicesService {
                 institution_id: dto.institution_id,
             },
         });
-        return this.resolve(created);
     }
 
     async update(id: string, dto: UpdateServiceDto, userId: string, userRole: string) {
@@ -82,8 +71,7 @@ export class ServicesService {
             });
             if (!membership) throw new ForbiddenException('No tienes permiso para editar este servicio');
         }
-        const updated = await this.prisma.service.update({ where: { id }, data: dto });
-        return this.resolve(updated);
+        return this.prisma.service.update({ where: { id }, data: dto });
     }
 
     async remove(id: string, userId: string, userRole: string) {
@@ -100,15 +88,14 @@ export class ServicesService {
     // ─── Branch assignment ──────────────────────────────────────────────
 
     /** List active services assigned to a specific branch */
-    async findByBranch(branchId: string) {
-        const results = await this.prisma.service.findMany({
+    findByBranch(branchId: string) {
+        return this.prisma.service.findMany({
             where: {
                 active: true,
                 branches: { some: { branch_id: branchId, active: true } },
             },
             orderBy: { name: 'asc' },
         });
-        return results.map(s => this.resolve(s));
     }
 
     /** Get all branch assignments for a given service */
