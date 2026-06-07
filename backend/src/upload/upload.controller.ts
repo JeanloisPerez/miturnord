@@ -1,10 +1,11 @@
 import {
-    Controller, Post, UploadedFile,
+    Controller, Post, Get, Param, Res, Req, UploadedFile,
     UseInterceptors, BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { Response, Request } from 'express';
 import { UploadService } from './upload.service';
 
 @ApiTags('Subida de Archivos - Uploads')
@@ -45,5 +46,18 @@ export class UploadController {
         if (!file) throw new BadRequestException('No se recibió ningún archivo');
         const url = await this.uploadService.uploadFile(file);
         return { url };
+    }
+
+    @Get('file/*key')
+    @ApiOperation({ summary: 'Servir un archivo desde el almacenamiento privado' })
+    @ApiResponse({ status: 200, description: 'Retorna el flujo de datos del archivo.' })
+    @ApiResponse({ status: 404, description: 'Archivo no encontrado.' })
+    async getFile(@Req() req: Request, @Res() res: Response) {
+        const prefix = '/upload/file/';
+        const rawKey = req.path.substring(req.path.indexOf(prefix) + prefix.length);
+        const key = decodeURIComponent(rawKey);
+        const { stream, contentType } = await this.uploadService.streamFile(key);
+        res.setHeader('Content-Type', contentType);
+        stream.pipe(res);
     }
 }
