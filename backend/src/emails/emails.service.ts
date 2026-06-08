@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
-import * as dns from 'dns';
 
 @Injectable()
 export class EmailsService {
@@ -22,7 +21,6 @@ this.transporter = nodemailer.createTransport({
   host: 'smtp-relay.brevo.com',
   port: 587,
   secure: false,
-  family: 4, // Fuerza IPv4
   auth: {
     user: process.env.BREVO_SMTP_LOGIN,
     pass: process.env.BREVO_API_KEY,
