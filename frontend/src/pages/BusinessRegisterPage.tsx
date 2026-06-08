@@ -35,7 +35,9 @@ export default function BusinessRegisterPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getInstitutionTypes().then(r => setTypes(r.data)).catch(() => {});
+    getInstitutionTypes()
+      .then(r => setTypes(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setTypes([]));
   }, []);
 
   const update = (f: string, v: string) => setForm(prev => ({ ...prev, [f]: v }));
