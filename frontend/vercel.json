@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://miturnord-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/upload/(.*)",
+      "destination": "https://miturnord-production.up.railway.app/upload/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
