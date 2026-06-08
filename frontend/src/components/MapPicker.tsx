@@ -9,10 +9,10 @@
  * - Read-only view mode (displays a static pin on the saved location)
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { MapPin } from 'lucide-react';
+import { LocateFixed, MapPin } from 'lucide-react';
 
 // Fix Leaflet default icon (broken in Vite/bundlers)
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -41,6 +41,9 @@ interface MapPickerProps {
     onChange?: (loc: MapLocation) => void;
     readOnly?: boolean;
     height?: number;
+    placeholder?: string;
+    helperText?: string;
+    autoLocateOnMount?: boolean;
 }
 
 // Inner component that handles map click events
@@ -62,14 +65,24 @@ function MapController({ center }: { center?: [number, number] }) {
     return null;
 }
 
-export default function MapPicker({ value, onChange, readOnly = false, height = 320 }: MapPickerProps) {
+export default function MapPicker({
+    value,
+    onChange,
+    readOnly = false,
+    height = 320,
+    placeholder = 'Buscar direcciÃ³n en RepÃºblica Dominicana...',
+    helperText,
+    autoLocateOnMount = false,
+}: MapPickerProps) {
     const [position, setPosition] = useState<[number, number] | null>(
         value ? [value.lat, value.lng] : null
     );
     const [flyTo, setFlyTo] = useState<[number, number] | undefined>();
     const [search, setSearch] = useState(value?.address ?? '');
     const [searching, setSearching] = useState(false);
+    const [locating, setLocating] = useState(false);
     const [searchError, setSearchError] = useState('');
+    const autoLocateTried = useRef(false);
 
     // Reverse geocode a lat/lng to an address string using Nominatim
     const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
@@ -123,6 +136,40 @@ export default function MapPicker({ value, onChange, readOnly = false, height = 
         }
     }, [search, onChange]);
 
+    const handleUseCurrentLocation = useCallback(() => {
+        if (readOnly) return;
+        if (!navigator.geolocation) {
+            setSearchError('Tu navegador no permite obtener la ubicaciÃ³n actual.');
+            return;
+        }
+
+        setLocating(true);
+        setSearchError('');
+        navigator.geolocation.getCurrentPosition(
+            async ({ coords }) => {
+                const lat = coords.latitude;
+                const lng = coords.longitude;
+                setPosition([lat, lng]);
+                setFlyTo([lat, lng]);
+                const address = await reverseGeocode(lat, lng);
+                setSearch(address);
+                onChange?.({ lat, lng, address });
+                setLocating(false);
+            },
+            () => {
+                setSearchError('No se pudo obtener tu ubicaciÃ³n. Revisa el permiso del navegador.');
+                setLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }, [readOnly, reverseGeocode, onChange]);
+
+    useEffect(() => {
+        if (!autoLocateOnMount || readOnly || value || autoLocateTried.current) return;
+        autoLocateTried.current = true;
+        handleUseCurrentLocation();
+    }, [autoLocateOnMount, handleUseCurrentLocation, readOnly, value]);
+
     // Handle Enter key in search input
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') { e.preventDefault(); handleSearch(); }
@@ -136,6 +183,7 @@ export default function MapPicker({ value, onChange, readOnly = false, height = 
                 <div className="flex gap-2">
                     <input
                         type="text"
+                        aria-label={placeholder}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -144,8 +192,17 @@ export default function MapPicker({ value, onChange, readOnly = false, height = 
                     />
                     <button
                         type="button"
+                        onClick={handleUseCurrentLocation}
+                        disabled={locating}
+                        className="border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 px-3 py-2 rounded-lg transition disabled:opacity-50 shrink-0"
+                        title="Usar mi ubicaciÃ³n actual"
+                    >
+                        <LocateFixed size={16} />
+                    </button>
+                    <button
+                        type="button"
                         onClick={handleSearch}
-                        disabled={searching}
+                        disabled={searching || locating}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition disabled:opacity-50 shrink-0"
                     >
                         {searching ? '...' : 'Buscar'}
@@ -158,7 +215,7 @@ export default function MapPicker({ value, onChange, readOnly = false, height = 
             {!readOnly && (
                 <p className="text-gray-400 text-xs flex items-center gap-1.5">
                     <MapPin size={12} className="shrink-0" />
-                    {position ? 'Pin colocado. Puedes moverlo haciendo clic en el mapa.' : 'Haz clic en el mapa para colocar el pin de la sucursal.'}
+                    {position ? 'Pin colocado. Puedes moverlo haciendo clic en el mapa.' : helperText || 'Haz clic en el mapa para colocar el pin de la sucursal.'}
                 </p>
             )}
 
