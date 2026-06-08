@@ -15,13 +15,13 @@ export class EmailsService {
       this.logger.warn('⚠️  BREVO_SMTP_LOGIN no está configurado en .env. Los correos NO se enviarán.');
     }
 
-    this.transporter = nodemailer.createTransport({
+       this.transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',
       port: 587,
       secure: false,
       auth: {
-        user: smtpLogin || '',
-        pass: smtpKey || '',
+        user: process.env.BREVO_SMTP_LOGIN,
+        pass: process.env.BREVO_API_KEY,
       },
     });
   }
