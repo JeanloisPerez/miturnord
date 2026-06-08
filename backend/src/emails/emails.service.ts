@@ -97,7 +97,8 @@ export class EmailsService {
       this.logger.log(`Correo enviado a ${toEmail} — messageId: ${info.messageId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Error enviando correo a ${toEmail}:`, error?.message || error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error enviando correo a ${toEmail}:`, errorMessage);
       return false;
     }
   }
@@ -179,7 +180,8 @@ export class EmailsService {
       this.logger.log(`Recordatorio enviado a ${toEmail} — messageId: ${info.messageId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Error enviando recordatorio a ${toEmail}:`, error?.message || error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error enviando recordatorio a ${toEmail}:`, errorMessage);
       return false;
     }
   }
@@ -246,7 +248,8 @@ export class EmailsService {
       this.logger.log(`Invitación de valoración enviada a ${toEmail} — messageId: ${info.messageId}`);
       return true;
     } catch (error) {
-      this.logger.error(`Error enviando invitación de valoración a ${toEmail}:`, error?.message || error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Error enviando invitación de valoración a ${toEmail}:`, errorMessage);
       return false;
     }
   }
