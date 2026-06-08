@@ -3,6 +3,7 @@ import { CreateInstitutionDto } from './dto/create-institution.dto';
 import { UpdateInstitutionDto } from './dto/update-institution.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { DEFAULT_INSTITUTION_TYPES } from '../constants/institution-types';
+import { UploadService } from '../upload/upload.service';
 
 const INSTITUTION_INCLUDE = {
   institution_type: true,
@@ -14,7 +15,22 @@ const INSTITUTION_INCLUDE = {
 
 @Injectable()
 export class InstitutionsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) { }
+
+  /** Normalize logo_url and nested services' image_url to absolute URLs. */
+  private resolveUrls<T extends Record<string, any>>(inst: T): T {
+    return {
+      ...inst,
+      logo_url: this.uploadService.resolveImageUrl(inst.logo_url),
+      services: inst.services?.map((s: any) => ({
+        ...s,
+        image_url: this.uploadService.resolveImageUrl(s.image_url),
+      })),
+    };
+  }
 
   async create(dto: CreateInstitutionDto) {
     const institution = await this.prisma.institution.create({
@@ -35,10 +51,11 @@ export class InstitutionsService {
       }
     }
 
-    return this.prisma.institution.findUnique({
+    const result = await this.prisma.institution.findUnique({
       where: { id: institution.id },
       include: INSTITUTION_INCLUDE
     });
+    return this.resolveUrls(result!);
   }
 
   async findAll(search?: string, institutionTypeId?: string) {
@@ -56,7 +73,7 @@ export class InstitutionsService {
       matchingInstitutionIds = matchingServices.map(s => s.institution_id);
     }
 
-    return this.prisma.institution.findMany({
+    const results = await this.prisma.institution.findMany({
       where: {
         status: 'active',
         is_public: true,          // Solo instituciones que eligieron ser públicas
@@ -76,6 +93,7 @@ export class InstitutionsService {
       },
       orderBy: { name: 'asc' },
     });
+    return results.map(inst => this.resolveUrls(inst));
   }
 
   async findOne(id: string) {
@@ -84,7 +102,7 @@ export class InstitutionsService {
       include: INSTITUTION_INCLUDE,
     });
     if (!institution) throw new NotFoundException(`Institución ${id} no encontrada`);
-    return institution;
+    return this.resolveUrls(institution);
   }
 
   async findBySlug(slug: string) {
@@ -93,7 +111,7 @@ export class InstitutionsService {
       include: INSTITUTION_INCLUDE,
     });
     if (!institution) throw new NotFoundException(`Institución "${slug}" no encontrada`);
-    return institution;
+    return this.resolveUrls(institution);
   }
 
   async update(id: string, dto: UpdateInstitutionDto, requestUserId?: string, requestUserRole?: string) {
@@ -106,11 +124,12 @@ export class InstitutionsService {
       if (!membership) throw new ForbiddenException('No tienes permiso para editar esta institución');
     }
 
-    return this.prisma.institution.update({
+    const updated = await this.prisma.institution.update({
       where: { id },
       data: dto,
       include: INSTITUTION_INCLUDE,
     });
+    return this.resolveUrls(updated);
   }
 
   async remove(id: string) {
