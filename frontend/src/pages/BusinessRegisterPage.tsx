@@ -1,12 +1,16 @@
-import { useState, useEffect } from 'react';
+import { Component, useState, useEffect, Suspense, lazy } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { registerUser, getInstitutionTypes } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar, User, Mail, Lock, Eye, EyeOff, Building2, Phone,
   MapPin, FileText, ArrowLeft, ArrowRight, CheckCircle, Settings,
-  LayoutDashboard, Clock, Briefcase, ChevronRight
+  LayoutDashboard, Clock, Briefcase, ChevronRight, Loader2
 } from 'lucide-react';
+import type { MapLocation } from '../components/MapPicker';
+
+const MapPicker = lazy(() => import('../components/MapPicker'));
 
 const ONBOARDING_STEPS = [
   { id: 'branch', Icon: Building2, title: 'Agrega tu primera sucursal', desc: 'Define el nombre, dirección y horario de tu punto de atención principal.', cta: 'Configurar sucursal', path: '/dashboard' },
@@ -28,6 +32,7 @@ export default function BusinessRegisterPage() {
     institution_name: '', institution_type_id: '',
     institution_address: '', institution_phone: '', institution_description: '',
   });
+  const [mapLoc, setMapLoc] = useState<MapLocation | null>(null);
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +46,10 @@ export default function BusinessRegisterPage() {
   }, []);
 
   const update = (f: string, v: string) => setForm(prev => ({ ...prev, [f]: v }));
+  const handleLocationChange = (loc: MapLocation) => {
+    setMapLoc(loc.address ? loc : null);
+    update('institution_address', loc.address);
+  };
 
   const next = () => {
     setError('');
@@ -229,6 +238,26 @@ export default function BusinessRegisterPage() {
                   </div>
                 </div>
                 {error && <ErrorBox msg={error} />}
+                <div>
+                  <MapPickerErrorBoundary>
+                    <Suspense fallback={<div style={mapFallbackSt}><Loader2 size={18} color="#94a3b8" className="animate-spin" /></div>}>
+                      <MapPicker
+                        value={mapLoc}
+                        onChange={handleLocationChange}
+                        height={230}
+                        autoLocateOnMount
+                        placeholder="Busca la direccion de tu institucion..."
+                        helperText="Busca la direccion, usa tu ubicacion actual o marca el punto en el mapa."
+                      />
+                    </Suspense>
+                  </MapPickerErrorBoundary>
+                  {form.institution_address && (
+                    <div style={selectedAddressSt}>
+                      <MapPin size={13} color="#3b82f6" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <span>{form.institution_address}</span>
+                    </div>
+                  )}
+                </div>
                 <button id="biz-next2" onClick={next} style={{ ...btnPri, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                   Continuar <ArrowRight size={17} strokeWidth={2.5} />
                 </button>
@@ -349,10 +378,38 @@ function Spinner() {
   return <span style={{ display: 'inline-block', width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />;
 }
 
+class MapPickerErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('MapPicker failed to render:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={mapFallbackSt}>
+          <div style={{ maxWidth: 340, padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.8125rem', lineHeight: 1.5 }}>
+            No se pudo cargar el mapa. Puedes continuar sin seleccionar una direccion.
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const h1St: React.CSSProperties = { fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' };
 const subSt: React.CSSProperties = { color: '#64748b', fontSize: '0.875rem', margin: '0.375rem 0 0' };
 const labelSt: React.CSSProperties = { display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' };
 const inputSt: React.CSSProperties = { width: '100%', padding: '0.75rem 1rem', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: '0.9375rem', color: '#111827', background: '#fff', outline: 'none', transition: 'border-color 0.2s, box-shadow 0.2s', boxSizing: 'border-box' };
+const mapFallbackSt: React.CSSProperties = { height: 230, borderRadius: 12, border: '1px solid #e5e7eb', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const selectedAddressSt: React.CSSProperties = { marginTop: '0.5rem', padding: '0.625rem 0.75rem', borderRadius: 10, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', display: 'flex', gap: '0.5rem', fontSize: '0.75rem', lineHeight: 1.45 };
 const onFocus = (e: any) => { e.target.style.borderColor = '#3b82f6'; e.target.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.12)'; };
 const onBlur = (e: any) => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; };
 const eyeSt: React.CSSProperties = { position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' };
