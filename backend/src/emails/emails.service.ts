@@ -1,32 +1,55 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import axios from 'axios';
 
 @Injectable()
 export class EmailsService {
   private readonly logger = new Logger(EmailsService.name);
-  private transporter: nodemailer.Transporter;
 
-  constructor(private configService: ConfigService) {
-    const smtpLogin = this.configService.get<string>('BREVO_SMTP_LOGIN');
-    const smtpKey = this.configService.get<string>('BREVO_API_KEY');
 
-    if (!smtpLogin) {
-      this.logger.warn('⚠️  BREVO_SMTP_LOGIN no está configurado en .env. Los correos NO se enviarán.');
+  private async sendEmail(
+    toEmail: string,
+    toName: string,
+    subject: string,
+    htmlContent: string,
+  ): Promise<boolean> {
+    try {
+      await axios.post(
+        'https://api.brevo.com/v3/smtp/email',
+        {
+          sender: {
+            name: 'MiTurnoRD',
+            email: 'noreply@miturnord.com', // o el remitente verificado en Brevo
+          },
+          to: [
+            {
+              email: toEmail,
+              name: toName,
+            },
+          ],
+          subject,
+          htmlContent,
+        },
+        {
+          headers: {
+            'api-key': process.env.BREVO_API_KEY,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      this.logger.log(`Correo enviado a ${toEmail}`);
+      return true;
+    } catch (error: any) {
+      this.logger.error(
+        `Error enviando correo a ${toEmail}`,
+        error.response?.data || error.message,
+      );
+      return false;
     }
 
-     
-
-this.transporter = nodemailer.createTransport({
-  host: 'smtp-relay.brevo.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_LOGIN,
-    pass: process.env.BREVO_API_KEY,
-  },
-});
   }
+
 
   async sendAppointmentConfirmation(
     toEmail: string,
@@ -35,12 +58,7 @@ this.transporter = nodemailer.createTransport({
     serviceName: string,
     institutionName: string,
   ): Promise<boolean> {
-    try {
-      const info = await this.transporter.sendMail({
-        from: `"MiTurnoRD" <jeanloisdelacruz@gmail.com>`,
-        to: `"${toName}" <${toEmail}>`,
-        subject: `Confirmación de cita en ${institutionName}`,
-        html: `
+    const html = `
           <html>
             <body style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; background-color: #f9fafb; margin: 0; padding: 0;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 0;">
@@ -93,16 +111,10 @@ this.transporter = nodemailer.createTransport({
               </table>
             </body>
           </html>
-        `,
-      });
+        `;
 
-      this.logger.log(`Correo enviado a ${toEmail} — messageId: ${info.messageId}`);
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error enviando correo a ${toEmail}:`, errorMessage);
-      return false;
-    }
+    return this.sendEmail(toEmail, toName, `Confirmación de cita en ${institutionName}`, html);
+
   }
 
   async sendAppointmentReminder(
@@ -112,12 +124,7 @@ this.transporter = nodemailer.createTransport({
     serviceName: string,
     institutionName: string,
   ): Promise<boolean> {
-    try {
-      const info = await this.transporter.sendMail({
-        from: `"MiTurnoRD" <jeanloisdelacruz@gmail.com>`,
-        to: `"${toName}" <${toEmail}>`,
-        subject: `Recordatorio: Cita mañana en ${institutionName}`,
-        html: `
+    const html = `
           <html>
             <body style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; background-color: #f9fafb; margin: 0; padding: 0;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 0;">
@@ -176,16 +183,10 @@ this.transporter = nodemailer.createTransport({
               </table>
             </body>
           </html>
-        `,
-      });
+        `;
 
-      this.logger.log(`Recordatorio enviado a ${toEmail} — messageId: ${info.messageId}`);
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error enviando recordatorio a ${toEmail}:`, errorMessage);
-      return false;
-    }
+    return this.sendEmail(toEmail, toName, `Recordatorio: Cita mañana en ${institutionName}`, html);
+
   }
 
   async sendReviewInvitation(
@@ -194,13 +195,8 @@ this.transporter = nodemailer.createTransport({
     serviceName: string,
     institutionName: string,
   ): Promise<boolean> {
-    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:5173');
-    try {
-      const info = await this.transporter.sendMail({
-        from: `"MiTurnoRD" <jeanloisdelacruz@gmail.com>`,
-        to: `"${toName}" <${toEmail}>`,
-        subject: `¿Cómo fue tu experiencia en ${institutionName}? Valoración y Reseña`,
-        html: `
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const html = `
           <html>
             <body style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; line-height: 1.6; background-color: #f9fafb; margin: 0; padding: 0;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9fafb; padding: 40px 0;">
@@ -244,15 +240,8 @@ this.transporter = nodemailer.createTransport({
               </table>
             </body>
           </html>
-        `,
-      });
+        `
+    return this.sendEmail(toEmail, toName, `¿Cómo fue tu experiencia en ${institutionName}? Valoración y Reseña`, html);
 
-      this.logger.log(`Invitación de valoración enviada a ${toEmail} — messageId: ${info.messageId}`);
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Error enviando invitación de valoración a ${toEmail}:`, errorMessage);
-      return false;
-    }
   }
 }
