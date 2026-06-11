@@ -19,7 +19,7 @@ export class EmailsService {
         {
           sender: {
             name: 'MiTurnoRD',
-            email: 'noreply@miturnord.com', // o el remitente verificado en Brevo
+            email: process.env.BREVO_SENDER_EMAIL,
           },
           to: [
             {
