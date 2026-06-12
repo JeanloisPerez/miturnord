@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 import axios from 'axios';
 
 @Injectable()
@@ -19,7 +18,7 @@ export class EmailsService {
         {
           sender: {
             name: 'MiTurnoRD',
-            email: process.env.BREVO_SENDER_EMAIL,
+            email: process.env.BREVO_SENDER_EMAIL, // o el remitente verificado en Brevo
           },
           to: [
             {
