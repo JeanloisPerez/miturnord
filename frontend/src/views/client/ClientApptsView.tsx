@@ -8,9 +8,15 @@ function AppointmentCard({ app, onClick, onCancel }: { app: any; onClick: () => 
     const isUpcoming = ['PENDING', 'CONFIRMED'].includes(app.status);
     
     return (
-        <button onClick={onClick} className="w-full text-left focus:outline-none group relative bg-white border border-gray-100 rounded-[24px] p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-start justify-between gap-4">
-                <div className="flex gap-4">
+        <div 
+            onClick={onClick} 
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+            role="button" 
+            tabIndex={0}
+            className="w-full text-left focus:outline-none group bg-white border border-gray-100 rounded-[24px] p-5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+        >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex gap-4 items-start">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-gradient-to-br ${getTypeGradient(app.institution?.institution_type?.name)} shadow-inner relative overflow-hidden`}>
                         {app.institution?.logo_url ? (
                             <img src={app.institution.logo_url} alt="logo" className="w-full h-full object-cover" />
@@ -44,20 +50,25 @@ function AppointmentCard({ app, onClick, onCancel }: { app: any; onClick: () => 
                     </div>
                 </div>
 
-                <div className="flex flex-col items-end justify-between h-full absolute right-5 top-5 bottom-5">
-                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:self-stretch">
+                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-black group-hover:text-white transition-colors order-2 sm:order-1">
                         <ChevronRight size={16} />
                     </div>
                     
                     {onCancel && isUpcoming && (
-                        <div onClick={(e) => { e.stopPropagation(); onCancel(); }} 
-                            className="text-[11px] font-bold uppercase tracking-wider text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 mt-auto">
+                        <div 
+                            onClick={(e) => { e.stopPropagation(); onCancel(); }} 
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onCancel(); } }}
+                            role="button"
+                            tabIndex={0}
+                            className="text-[11px] font-bold uppercase tracking-wider text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 order-1 sm:order-2 cursor-pointer"
+                        >
                             <X size={12} /> Cancelar
                         </div>
                     )}
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
 

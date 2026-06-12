@@ -196,7 +196,7 @@ export default function ClientDashboard() {
                         <Menu size={20} className="text-gray-700" />
                     </button>
                     {/* Logo (mobile) */}
-                    <span className="lg:hidden font-black text-lg text-black tracking-tight">
+                    <span className="hidden sm:block lg:hidden font-black text-lg text-black tracking-tight">
                         MiTurno<span className="text-blue-600">RD</span>
                     </span>
                     {/* Header Search Bar */}
@@ -206,8 +206,15 @@ export default function ClientDashboard() {
                             value={searchInput}
                             onChange={e => setSearchInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit(); }}
+                            placeholder="Buscar..."
+                            className="w-full sm:hidden pl-10 pr-24 py-2 bg-gray-100 rounded-full text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                        />
+                        <input
+                            value={searchInput}
+                            onChange={e => setSearchInput(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSearchSubmit(); }}
                             placeholder="Buscar en el catálogo (Ej: Odontólogo, Dr. Carlos...)"
-                            className="w-full pl-10 pr-24 py-2 bg-gray-100 rounded-full text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
+                            className="hidden sm:block w-full pl-10 pr-24 py-2 bg-gray-100 rounded-full text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
                         />
                         <button 
                             onClick={handleSearchSubmit}

@@ -73,19 +73,18 @@ function Stepper({ currentStep }: { currentStep: number }) {
     return (
         <div className="flex items-center justify-between max-w-2xl mx-auto mb-8 relative px-2">
             {/* Background connecting line */}
-            <div className="absolute left-8 right-8 top-5 h-1 bg-gray-100 -translate-y-1/2 z-0"></div>
-
-            {/* Active connecting line */}
-            <div
-                className="absolute left-8 top-5 h-1 bg-emerald-500 -translate-y-1/2 z-0 transition-all duration-500 ease-out"
-                style={{
-                    width: currentStep === 1 ? '0%' :
-                        currentStep === 2 ? '25%' :
-                            currentStep === 3 ? '50%' :
-                                currentStep === 4 ? '75%' : '100%',
-                    maxWidth: 'calc(100% - 64px)'
-                }}
-            ></div>
+            <div className="absolute left-8 right-8 top-5 h-1 bg-gray-100 -translate-y-1/2 z-0">
+                {/* Active connecting line */}
+                <div
+                    className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+                    style={{
+                        width: currentStep === 1 ? '0%' :
+                            currentStep === 2 ? '25%' :
+                                currentStep === 3 ? '50%' :
+                                    currentStep === 4 ? '75%' : '100%'
+                    }}
+                ></div>
+            </div>
 
             {steps.map((s) => {
                 const stepNum = s.id;
@@ -102,7 +101,7 @@ function Stepper({ currentStep }: { currentStep: number }) {
                                     : 'bg-white text-gray-400 border-2 border-gray-100'}`}>
                             {isCompleted ? <CheckCircle size={16} strokeWidth={2.5} /> : stepNum}
                         </div>
-                        <span className={`text-[10px] sm:text-xs font-bold tracking-tight text-center transition-colors duration-300
+                        <span className={`hidden sm:block text-[10px] sm:text-xs font-bold tracking-tight text-center transition-colors duration-300
                             ${isActive ? 'text-gray-900 font-extrabold' : isCompleted ? 'text-gray-600 font-medium' : 'text-gray-300'}`}>
                             {s.label}
                         </span>
@@ -682,7 +681,7 @@ export default function ClientInstitutionDetailView({
                     {/* ── STEP 1: SERVICES ── */}
                     {bookStep === 1 && (
                         <div className="space-y-6 animate-in slide-in-from-right-4 fade-in duration-300">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div>
                                     <h2 className="text-xl font-black text-gray-900 tracking-tight">Selecciona un Servicio</h2>
                                     <p className="text-sm text-gray-500 mt-1">Elige el servicio que deseas programar</p>
@@ -807,7 +806,7 @@ export default function ClientInstitutionDetailView({
                                             <span className="text-sm font-medium">Horarios agotados este día</span>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                                        <div className="grid grid-cols-3 min-[375px]:grid-cols-4 sm:grid-cols-5 gap-3">
                                             {slots.map(slot => (
                                                 <button key={slot} onClick={() => setSelSlot(slot)}
                                                     className={`py-3 px-1 rounded-2xl text-sm font-black transition-all duration-200 active:scale-95 border-2

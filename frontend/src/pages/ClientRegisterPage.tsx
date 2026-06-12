@@ -205,7 +205,7 @@ export default function ClientRegisterPage() {
                 </div>
                 {error && <ErrorBox msg={error} />}
                 <button id="client-reg-submit" onClick={handleSubmit} disabled={loading}
-                  style={{ ...btnPri, background: loading ? '#93c5fd' : undefined, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  style={{ ...btnPri, background: loading ? '#93c5fd' : 'linear-gradient(135deg,#3b82f6,#1d4ed8)', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                   {loading ? <><Spinner />Creando cuenta...</> : <><UserPlus size={17} strokeWidth={2} />Crear mi cuenta</>}
                 </button>
                 <button onClick={() => { setStep(1); setError(''); }} style={{ ...btnSec, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}>

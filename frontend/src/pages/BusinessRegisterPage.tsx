@@ -294,7 +294,7 @@ export default function BusinessRegisterPage() {
                 Podrás completar estas configuraciones desde tu panel después del registro.
               </div>
               {error && <ErrorBox msg={error} />}
-              <button id="biz-submit" onClick={next} disabled={loading} style={{ ...btnPri, background: loading ? '#93c5fd' : undefined, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <button id="biz-submit" onClick={next} disabled={loading} style={{ ...btnPri, background: loading ? '#93c5fd' : 'linear-gradient(135deg,#3b82f6,#1d4ed8)', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                 {loading ? <><Spinner />Creando tu institución...</> : <><LayoutDashboard size={17} strokeWidth={2} />Crear cuenta y comenzar</>}
               </button>
               <button onClick={() => { setStep(2); setError(''); }} style={{ ...btnSec, marginTop: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}>
